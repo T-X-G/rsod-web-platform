@@ -1,78 +1,140 @@
-# 导入FastAPI框架核心类，用于创建Web应用
-from fastapi import FastAPI
-# 导入CORS中间件，处理跨域资源共享问题
-from fastapi.middleware.cors import CORSMiddleware
+# =============================================================================
+# FastAPI 应用入口
+# =============================================================================
+# 功能：创建 FastAPI 应用，配置中间件，注册路由
+# 依赖：fastapi, uvicorn
+# =============================================================================
 
-# ==================== FastAPI应用实例化 ====================
-# 创建FastAPI应用对象，配置API文档信息
-# 参数说明：
-# - title: API文档显示的标题
-# - description: API文档的详细描述
-# - version: API版本号，便于版本管理
+from fastapi import FastAPI                                      # FastAPI 框架
+from fastapi.middleware.cors import CORSMiddleware              # CORS 中间件
+from fastapi.staticfiles import StaticFiles                      # 静态文件服务
+from app.config import settings                                  # 配置
+from app.api.detection import router as detection_router         # 检测 API 路由
+from app.api.model import router as model_router                 # 模型管理 API 路由
+from app.utils.file_utils import ensure_directories              # 确保目录存在
+
+# 启动时确保必要的目录存在（上传目录、结果目录等）
+ensure_directories()
+
+# =============================================================================
+# 创建 FastAPI 应用实例
+# =============================================================================
 app = FastAPI(
-    title="遥感目标智能检测平台",
-    description="基于YOLO11的遥感图像目标检测系统API，支持飞机、油罐、立交桥、操场等目标检测",
-    version="1.0.0"
+    title=settings.app_name,                                    # API 文档标题
+    version=settings.app_version,                                # API 版本
+    description="遥感目标检测平台后端 API"                        # API 描述
 )
 
-# ==================== CORS跨域中间件配置 ====================
-# 配置跨域访问规则，允许前端应用访问后端API
-# 参数说明：
-# - allow_origins: 允许访问的源地址列表，["*"]表示允许所有来源（生产环境需限制）
-# - allow_credentials: 是否允许携带身份凭证（如Cookie、Token）
-# - allow_methods: 允许的HTTP方法（GET、POST、PUT、DELETE等）
-# - allow_headers: 允许的请求头字段
+# =============================================================================
+# 配置 CORS 中间件
+# =============================================================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 开发环境允许所有来源，生产环境应指定具体域名
-    allow_credentials=True,  # 启用凭证支持
-    allow_methods=["*"],  # 允许所有HTTP方法
-    allow_headers=["*"],  # 允许所有请求头
+    allow_origins=settings.cors_origins,                        # 允许的跨域来源
+    allow_credentials=True,                                     # 允许携带凭证
+    allow_methods=["*"],                                        # 允许所有 HTTP 方法
+    allow_headers=["*"],                                        # 允许所有请求头
 )
 
+# =============================================================================
+# 挂载静态文件目录
+# =============================================================================
+# 访问 URL: http://host:port/static/文件名
+# 实际路径: settings.static_dir/文件名
+app.mount("/static", StaticFiles(directory=settings.static_dir), name="static")
 
-# ==================== API接口定义 ====================
+# =============================================================================
+# 注册 API 路由
+# =============================================================================
+# 所有检测相关的 API 都会以 /api/detection 为前缀
+app.include_router(detection_router, prefix="/api")
+# 所有模型管理相关的 API 都会以 /api/model 为前缀
+app.include_router(model_router, prefix="/api")
 
-# 健康检查接口 - GET请求
-# @app.get装饰器定义GET请求接口
-# tags参数用于在Swagger文档中分组显示
-@app.get("/health", tags=["健康检查"])
-async def health_check():
-    """
-    健康检查接口
-    用于检测服务运行状态，支持负载均衡器健康检查
 
-    返回值说明：
-    - status: 服务状态（healthy表示正常）
-    - service: 服务名称标识
-    - version: 当前服务版本号
-    """
+# =============================================================================
+# 根路径
+# =============================================================================
+@app.get("/")
+async def root():
+    """根路径返回应用信息"""
     return {
-        "status": "healthy",  # 服务健康状态
-        "service": "rsod-web-platform",  # 服务名称
-        "version": "1.0.0"  # 服务版本
+        "name": settings.app_name,
+        "version": settings.app_version,
+        "status": "running"
     }
 
 
-# 根路径接口 - GET请求
-@app.get("/", tags=["根路径"])
-async def root():
+# =============================================================================
+# 健康检查接口
+# =============================================================================
+@app.get("/health")
+async def health_check():
     """
-    根路径欢迎接口
-    返回平台欢迎信息
+    健康检查接口
+
+    功能：检查所有依赖服务的状态
+    - PostgreSQL：数据库连接
+    - MinIO：对象存储连接
+    - Redis：缓存连接
+
+    返回：
+        dict: 包含各服务状态的字典
     """
-    return {"message": "欢迎使用遥感目标智能检测平台"}
+    postgres_ok = False
+    minio_ok = False
+    redis_ok = False
+
+    # 检查 PostgreSQL
+    try:
+        from app.models.database import engine
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        postgres_ok = True
+    except Exception:
+        pass
+
+    # 检查 Redis
+    try:
+        from app.services.redis_service import redis_service
+        redis_ok = redis_service.ping()
+    except Exception:
+        pass
+
+    # 检查 MinIO
+    try:
+        from app.services.minio_service import minio_service
+        minio_service.client.list_buckets()
+        minio_ok = True
+    except Exception:
+        pass
+
+    # 计算整体状态
+    all_ok = all([postgres_ok, minio_ok, redis_ok])
+    status = "healthy" if all_ok else "degraded"
+
+    return {
+        "status": status,
+        "services": {
+            "postgres": "up" if postgres_ok else "down",
+            "minio": "up" if minio_ok else "down",
+            "redis": "up" if redis_ok else "down"
+        }
+    }
 
 
-# ==================== 应用启动入口 ====================
-# 判断是否直接运行本文件（而非被导入）
+# =============================================================================
+# 应用启动入口
+# =============================================================================
 if __name__ == "__main__":
-    # 导入UVicorn ASGI服务器
-    import uvicorn
+    import uvicorn                                               # ASGI 服务器
 
-    # 启动Web服务
-    # 参数说明：
-    # - app: FastAPI应用对象
-    # - host: 监听地址，0.0.0.0表示监听所有网络接口
-    # - port: 服务端口号
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(
+        "main:app",                                             # 应用模块路径
+        host=settings.host,                                      # 监听地址
+        port=settings.port,                                      # 监听端口
+        reload=settings.debug,                                   # 开发模式启用热重载
+        log_level="debug" if settings.debug else "info",         # 日志级别
+        access_log=True                                          # 启用访问日志
+    )
