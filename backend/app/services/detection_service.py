@@ -288,13 +288,14 @@ class DetectionService:
         - RSOD 数据集包含 4 种遥感目标
         - 支持飞机、油罐、立交桥、操场的检测
         """
-        # RSOD 数据集 4 类目标名称映射
-        # 类别 ID：目标名称
+        # NEU-CLS 数据集 6 类钢铁缺陷名称映射
         self.class_names = {
-            0: "aircraft",    # 飞机
-            1: "oiltank",     # 油罐
-            2: "overpass",    # 立交桥
-            3: "playground",  # 操场
+            0: "crazing",           # 裂纹
+            1: "inclusion",         # 夹杂物
+            2: "patches",           # 斑块
+            3: "pitted_surface",    # 点蚀表面
+            4: "rolled-in_scale",   # 轧制氧化皮
+            5: "scratches",         # 划痕
         }
 
     def get_class_chinese_name(self, class_name: str) -> str:
@@ -308,10 +309,12 @@ class DetectionService:
             str: 类别中文名称
         """
         chinese_names = {
-            "aircraft": "飞机",
-            "oiltank": "油罐",
-            "overpass": "立交桥",
-            "playground": "操场"
+            "crazing": "裂纹",
+            "inclusion": "夹杂物",
+            "patches": "斑块",
+            "pitted_surface": "点蚀表面",
+            "rolled-in_scale": "轧制氧化皮",
+            "scratches": "划痕"
         }
         return chinese_names.get(class_name, class_name)
 

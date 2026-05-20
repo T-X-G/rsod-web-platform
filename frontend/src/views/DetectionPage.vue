@@ -7,9 +7,9 @@
         <span class="separator">›</span>
         <span class="active">智能检测</span>
       </div>
-      <h1 class="page-title">上传遥感影像，立即识别多类目标</h1>
+      <h1 class="page-title">上传钢铁表面图像，立即识别各类缺陷</h1>
       <p class="page-subtitle">
-        支持飞机 / 油罐 / 操场 / 建筑物 / 船舶 / 农业虫害等多目标检测
+        支持裂纹 / 夹杂物 / 斑块 / 点蚀表面 / 轧制氧化皮 / 划痕等缺陷检测
       </p>
     </div>
 

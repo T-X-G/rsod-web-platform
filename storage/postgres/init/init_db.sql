@@ -104,13 +104,9 @@ CREATE INDEX idx_model_versions_status ON model_versions(status);
 
 -- 插入目标类别数据
 INSERT INTO target_categories (name, chinese_name, description, color, sort_order) VALUES
-('airplane', '飞机', '固定翼飞机、直升机等', '#ef4444', 1),
-('oil_tank', '油罐', '储油罐、化工罐等', '#f59e0b', 2),
-('playground', '操场', '运动场、操场等', '#10b981', 3),
-('building', '建筑物', '各类建筑物', '#3b82f6', 4),
-('ship', '船舶', '各类船舶', '#8b5cf6', 5),
-('pest', '农业虫害', '农作物病虫害', '#ec4899', 6),
-('person', '行人', '人体目标', '#06b6d4', 7),
-('car', '汽车', '各类汽车', '#84cc16', 8),
-('bus', '公交车', '公共汽车', '#f97316', 9),
-('truck', '卡车', '货运卡车', '#6366f1', 10);
+('crazing', '裂纹', '表面裂纹缺陷', '#ef4444', 1),
+('inclusion', '夹杂物', '材料内部夹杂物', '#f59e0b', 2),
+('patches', '斑块', '表面斑块缺陷', '#10b981', 3),
+('pitted_surface', '点蚀表面', '表面点蚀缺陷', '#3b82f6', 4),
+('rolled-in_scale', '轧制氧化皮', '轧制氧化皮缺陷', '#8b5cf6', 5),
+('scratches', '划痕', '表面划痕缺陷', '#06b6d4', 6);

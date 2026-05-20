@@ -419,12 +419,14 @@ async def get_target_list():
             ]
         }
     """
-    # 定义 RSOD 数据集支持检测的目标类别列表
+    # 定义 NEU-CLS 数据集支持检测的钢铁缺陷类别列表
     targets = [
-        TargetItem(id=0, name="aircraft", chinese_name="飞机", description="固定翼飞机、直升机等"),
-        TargetItem(id=1, name="oiltank", chinese_name="油罐", description="储油罐、化工罐等"),
-        TargetItem(id=2, name="overpass", chinese_name="立交桥", description="各类立交桥"),
-        TargetItem(id=3, name="playground", chinese_name="操场", description="运动场、操场等"),
+        TargetItem(id=0, name="crazing", chinese_name="裂纹", description="表面裂纹缺陷"),
+        TargetItem(id=1, name="inclusion", chinese_name="夹杂物", description="材料内部夹杂物"),
+        TargetItem(id=2, name="patches", chinese_name="斑块", description="表面斑块缺陷"),
+        TargetItem(id=3, name="pitted_surface", chinese_name="点蚀表面", description="表面点蚀缺陷"),
+        TargetItem(id=4, name="rolled-in_scale", chinese_name="轧制氧化皮", description="轧制氧化皮缺陷"),
+        TargetItem(id=5, name="scratches", chinese_name="划痕", description="表面划痕缺陷"),
     ]
 
     # 返回目标列表响应

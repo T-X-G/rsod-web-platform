@@ -3,7 +3,7 @@
     <!-- 页面头部 -->
     <div class="page-header">
       <h1 class="page-title">目标检测库</h1>
-      <p class="page-subtitle">平台支持检测的所有遥感目标类别</p>
+      <p class="page-subtitle">平台支持检测的所有钢铁缺陷类别</p>
     </div>
 
     <!-- 搜索框 -->
@@ -122,21 +122,6 @@ import {
   CircleCheck,
   Help,
   Document,
-  Ship,
-  Van,
-  Guide,
-  Bicycle,
-  OfficeBuilding,
-  Shop,
-  School,
-  MapLocation,
-  Coordinate,
-  Place,
-  AddLocation,
-  Location,
-  PictureRounded,
-  Sunny,
-  ArrowRight,
   Setting,
   InfoFilled,
 } from "@element-plus/icons-vue";
@@ -148,54 +133,32 @@ const selectedTarget = ref(null);
 const categories = ref([
   {
     id: 1,
-    name: "交通工具类",
-    icon: Bicycle,
-    color: "#3b82f6",
+    name: "表面缺陷类",
+    icon: Setting,
+    color: "#ef4444",
     targets: [
-      { id: 1, name: "飞机", categoryId: 1, description: "各类民航、军用飞机", accuracy: "98.5%" },
-      { id: 2, name: "船舶", categoryId: 1, description: "货轮、客轮、军舰等", accuracy: "97.2%" },
-      { id: 3, name: "汽车", categoryId: 1, description: "各类乘用车、商用车", accuracy: "96.8%" },
-      { id: 4, name: "火车", categoryId: 1, description: "客运、货运列车", accuracy: "95.6%" },
-      { id: 5, name: "卡车", categoryId: 1, description: "大型货运卡车", accuracy: "94.3%" },
+      { id: 1, name: "裂纹", categoryId: 1, description: "表面裂纹缺陷 (Crazing)", accuracy: "96.5%" },
+      { id: 2, name: "划痕", categoryId: 1, description: "表面划痕缺陷 (Scratches)", accuracy: "95.8%" },
+      { id: 3, name: "斑块", categoryId: 1, description: "表面斑块缺陷 (Patches)", accuracy: "94.2%" },
     ],
   },
   {
     id: 2,
-    name: "建筑设施类",
-    icon: OfficeBuilding,
-    color: "#10b981",
+    name: "表面损伤类",
+    icon: Grid,
+    color: "#f59e0b",
     targets: [
-      { id: 6, name: "油罐", categoryId: 2, description: "储油罐、储气罐", accuracy: "99.1%" },
-      { id: 7, name: "立交桥", categoryId: 2, description: "城市互通立交桥", accuracy: "97.8%" },
-      { id: 8, name: "体育场", categoryId: 2, description: "各类体育场馆", accuracy: "96.4%" },
-      { id: 9, name: "港口", categoryId: 2, description: "海港、河港设施", accuracy: "95.9%" },
-      { id: 10, name: "机场跑道", categoryId: 2, description: "机场起降跑道", accuracy: "98.7%" },
+      { id: 4, name: "点蚀表面", categoryId: 2, description: "表面点蚀缺陷 (Pitted Surface)", accuracy: "93.7%" },
+      { id: 5, name: "轧制氧化皮", categoryId: 2, description: "轧制氧化皮缺陷 (Rolled-in Scale)", accuracy: "92.1%" },
     ],
   },
   {
     id: 3,
-    name: "自然地貌类",
-    icon: Sunny,
-    color: "#f59e0b",
+    name: "内部缺陷类",
+    icon: Aim,
+    color: "#3b82f6",
     targets: [
-      { id: 11, name: "湖泊", categoryId: 3, description: "天然或人工湖泊", accuracy: "99.5%" },
-      { id: 12, name: "河流", categoryId: 3, description: "江河溪流", accuracy: "98.9%" },
-      { id: 13, name: "森林", categoryId: 3, description: "成片树林", accuracy: "97.6%" },
-      { id: 14, name: "农田", categoryId: 3, description: "耕地、农田", accuracy: "96.2%" },
-      { id: 15, name: "山地", categoryId: 3, description: "山脉、丘陵", accuracy: "95.4%" },
-    ],
-  },
-  {
-    id: 4,
-    name: "其他目标",
-    icon: Setting,
-    color: "#8b5cf6",
-    targets: [
-      { id: 16, name: "风力发电机", categoryId: 4, description: "大型风力发电设施", accuracy: "98.3%" },
-      { id: 17, name: "太阳能板", categoryId: 4, description: "光伏太阳能板", accuracy: "97.1%" },
-      { id: 18, name: "桥梁", categoryId: 4, description: "公路、铁路桥梁", accuracy: "96.7%" },
-      { id: 19, name: "烟囱", categoryId: 4, description: "工业烟囱", accuracy: "95.8%" },
-      { id: 20, name: "储水池", categoryId: 4, description: "蓄水池、水库", accuracy: "94.9%" },
+      { id: 6, name: "夹杂物", categoryId: 3, description: "材料内部夹杂物 (Inclusion)", accuracy: "91.4%" },
     ],
   },
 ]);

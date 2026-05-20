@@ -50,6 +50,11 @@ const routes = [
     name: "系统设置",
     component: () => import("../views/Settings.vue"),
   },
+  {
+    path: "/test-connect",
+    name: "连接测试",
+    component: () => import("../views/test_connect.vue"),
+  },
 ];
 
 const router = createRouter({
@@ -59,7 +64,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
-  const authPaths = ["/login", "/register", "/forgot-password"];
+  const authPaths = ["/login", "/register", "/forgot-password", "/test-connect"];
   
   if (authPaths.includes(to.path)) {
     next();
