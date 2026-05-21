@@ -41,63 +41,67 @@ const sending = ref(false);
 <style scoped lang="scss">
 .qa-page {
   width: 100%;
-  height: 100%;
+  height: calc(100vh - 64px - 48px);
   display: flex;
   flex-direction: column;
 
   .page-header {
-    margin-bottom: 24px;
+    margin-bottom: var(--spacing-lg);
 
     .page-title {
-      font-size: 24px;
-      font-weight: 600;
+      font-size: var(--text-3xl);
+      font-weight: 700;
       color: var(--text-primary);
-      margin-bottom: 8px;
+      margin-bottom: var(--spacing-xs);
     }
 
     .page-subtitle {
-      font-size: 14px;
+      font-size: var(--text-base);
       color: var(--text-secondary);
     }
   }
 
   .chat-container {
     flex: 1;
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: var(--card-shadow);
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 
     .chat-messages {
       flex: 1;
-      padding: 20px;
+      padding: var(--spacing-lg);
       overflow-y: auto;
 
       .message {
         display: flex;
-        margin-bottom: 20px;
+        margin-bottom: var(--spacing-lg);
 
         .message-avatar {
-          width: 36px;
-          height: 36px;
+          width: 40px;
+          height: 40px;
           border-radius: 50%;
-          background-color: var(--primary-color);
+          background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
           color: white;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-right: 12px;
+          margin-right: var(--spacing-md);
           flex-shrink: 0;
+          box-shadow: var(--shadow-sm);
         }
 
         .message-content {
-          background-color: #f3f4f6;
-          padding: 12px 16px;
-          border-radius: 0 12px 12px 12px;
+          background-color: var(--bg-secondary);
+          padding: var(--spacing-md);
+          border-radius: 0 var(--radius-lg) var(--radius-lg) var(--radius-lg);
           max-width: 70%;
-          line-height: 1.6;
-          font-size: 14px;
+          line-height: 1.7;
+          font-size: var(--text-sm);
+          color: var(--text-primary);
         }
 
         &.user-message {
@@ -105,29 +109,65 @@ const sending = ref(false);
 
           .message-avatar {
             margin-right: 0;
-            margin-left: 12px;
-            background-color: #60a5fa;
+            margin-left: var(--spacing-md);
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
           }
 
           .message-content {
             background-color: var(--primary-light);
-            border-radius: 12px 0 12px 12px;
+            color: var(--text-primary);
+            border-radius: var(--radius-lg) 0 var(--radius-lg) var(--radius-lg);
           }
         }
       }
     }
 
     .chat-input {
-      padding: 20px;
-      border-top: 1px solid var(--border-color);
+      padding: var(--spacing-lg);
+      border-top: 1px solid var(--border-light);
       display: flex;
-      gap: 12px;
+      gap: var(--spacing-md);
+      background-color: var(--bg-secondary);
+
+      :deep(.el-textarea__inner) {
+        border-radius: var(--radius-md);
+        border-color: var(--border-color);
+        padding: var(--spacing-md);
+        font-size: var(--text-sm);
+      }
 
       .send-btn {
         width: 100px;
         height: auto;
+        border-radius: var(--radius-md);
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        font-weight: 500;
+      }
+
+      .send-btn:hover {
+        background-color: var(--primary-dark);
+        border-color: var(--primary-dark);
       }
     }
+  }
+}
+
+@media (max-width: 768px) {
+  .qa-page {
+    height: calc(100vh - 64px - 32px);
+  }
+
+  .chat-container .chat-messages .message .message-content {
+    max-width: 85%;
+  }
+
+  .chat-input {
+    padding: var(--spacing-md) !important;
+  }
+
+  .send-btn {
+    width: 80px !important;
   }
 }
 </style>

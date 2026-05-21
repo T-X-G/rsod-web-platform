@@ -458,33 +458,34 @@ const handleRedetect = () => {
 }
 
 .page-header {
-  margin-bottom: 32px;
+  margin-bottom: var(--spacing-xl);
   padding-top: 0;
 }
 
 .breadcrumb {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-sm);
 }
 
 .separator {
   margin: 0 6px;
 }
 
-.active {
+.breadcrumb .active {
   color: var(--text-primary);
+  font-weight: 500;
 }
 
 .page-title {
-  font-size: 28px;
-  font-weight: 600;
+  font-size: var(--text-3xl);
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-xs);
 }
 
 .page-subtitle {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text-secondary);
 }
 
@@ -495,11 +496,16 @@ const handleRedetect = () => {
   z-index: 10;
 }
 
+.model-selector .el-select {
+  border-radius: var(--radius-md);
+  border-color: var(--border-color);
+}
+
 /* 功能选项卡 */
 .function-tabs {
   display: flex;
-  gap: 16px;
-  margin-bottom: 32px;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
   justify-content: center;
   max-width: 600px;
   margin-left: auto;
@@ -512,15 +518,15 @@ const handleRedetect = () => {
   max-width: 280px;
   display: flex;
   align-items: center;
-  padding: 20px 24px;
-  background-color: #ffffff;
-  border-radius: 12px;
+  padding: var(--spacing-lg);
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
   border: 2px solid transparent;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--card-shadow);
+  box-shadow: var(--shadow-sm);
 }
 
 .file-input {
@@ -534,19 +540,20 @@ const handleRedetect = () => {
 
 .function-tab:hover {
   background-color: var(--primary-light);
-  box-shadow: 0 4px 16px rgba(39, 174, 96, 0.15);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 .function-tab.active {
   background-color: var(--primary-light);
   border-color: var(--primary-color);
-  box-shadow: 0 4px 16px rgba(39, 174, 96, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
 .tab-icon {
   font-size: 24px;
   color: var(--primary-color);
-  margin-right: 14px;
+  margin-right: var(--spacing-md);
   flex-shrink: 0;
 }
 
@@ -556,15 +563,15 @@ const handleRedetect = () => {
 }
 
 .tab-text {
-  font-size: 15px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.4;
 }
 
 .tab-desc {
-  font-size: 12px;
-  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
   line-height: 1.4;
 }
 
@@ -572,26 +579,27 @@ const handleRedetect = () => {
 .main-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 /* 检测预览面板 */
 .left-panel {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--card-shadow);
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
 }
 
 .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .panel-title {
-  font-size: 16px;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -599,18 +607,19 @@ const handleRedetect = () => {
 .result-tag {
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 13px;
+  font-size: var(--text-xs);
 }
 
 .toolbar {
   display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
 }
 
 .toolbar .el-button {
-  border-radius: 6px;
-  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--text-sm);
 }
 
 .toolbar .el-button.active {
@@ -622,22 +631,22 @@ const handleRedetect = () => {
 /* 图片对比区域 */
 .image-compare {
   display: flex;
-  gap: 20px;
+  gap: var(--spacing-lg);
   height: 360px;
 }
 
 .image-card {
   flex: 1;
   position: relative;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  background-color: #f9fafb;
+  background-color: var(--bg-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .image-card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .image-placeholder {
@@ -647,26 +656,26 @@ const handleRedetect = () => {
   justify-content: center;
   height: 100%;
   width: 100%;
-  padding: 24px;
+  padding: var(--spacing-lg);
   text-align: center;
 }
 
 .placeholder-icon {
   font-size: 56px;
-  color: #d1d5db;
-  margin-bottom: 16px;
+  color: var(--text-light);
+  margin-bottom: var(--spacing-md);
 }
 
 .placeholder-text {
-  font-size: 15px;
+  font-size: var(--text-base);
   font-weight: 500;
-  color: #6b7280;
-  margin-bottom: 6px;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
 }
 
 .placeholder-desc {
-  font-size: 13px;
-  color: #9ca3af;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 }
 
 .compare-image {
@@ -687,7 +696,7 @@ const handleRedetect = () => {
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: all 0.3s;
+  transition: all var(--transition-normal);
   pointer-events: none;
 }
 
@@ -698,13 +707,13 @@ const handleRedetect = () => {
 
 .zoom-icon {
   font-size: 32px;
-  color: #ffffff;
-  margin-bottom: 8px;
+  color: white;
+  margin-bottom: var(--spacing-xs);
 }
 
 .overlay-text {
-  font-size: 14px;
-  color: #ffffff;
+  font-size: var(--text-sm);
+  color: white;
 }
 
 .image-label {
@@ -712,16 +721,16 @@ const handleRedetect = () => {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 10px 14px;
+  padding: var(--spacing-sm) var(--spacing-md);
   background: rgba(0, 0, 0, 0.6);
-  color: #ffffff;
-  font-size: 13px;
+  color: white;
+  font-size: var(--text-sm);
 }
 
 .detection-mark {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -734,30 +743,49 @@ const handleRedetect = () => {
 
 .detection-mark::after {
   content: "✓";
-  color: #ffffff;
+  color: white;
   font-size: 20px;
   font-weight: bold;
 }
 
 /* 信息卡片 */
 .info-card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: var(--card-shadow);
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.card-header .el-icon {
+  font-size: var(--text-lg);
+  color: var(--primary-color);
+  margin-right: var(--spacing-sm);
+}
+
+.card-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .info-content {
   display: flex;
-  gap: 40px;
+  gap: var(--spacing-xl);
 }
 
 .info-item {
   flex: 1;
   display: flex;
   justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border-color);
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .info-item:last-child {
@@ -765,72 +793,55 @@ const handleRedetect = () => {
 }
 
 .info-label {
-  font-size: 14px;
-  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 }
 
 .info-value {
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-primary);
 }
 
 /* 结果卡片 */
 .result-card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: var(--card-shadow);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.card-header .el-icon {
-  font-size: 18px;
-  color: var(--primary-color);
-  margin-right: 10px;
-}
-
-.card-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
 }
 
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 0;
+  padding: var(--spacing-xl) 0;
 }
 
 .empty-icon {
   font-size: 56px;
   color: var(--success-color);
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
 }
 
 .empty-text {
-  font-size: 15px;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 6px;
+  margin-bottom: var(--spacing-xs);
 }
 
 .empty-desc {
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 }
 
 .diagnosis-content {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   line-height: 1.8;
-  padding: 10px 0;
+  padding: var(--spacing-sm) 0;
 }
 
 .detection-list {
@@ -842,15 +853,15 @@ const handleRedetect = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
-  background-color: #f9fafb;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  transition: all 0.2s;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-sm);
+  transition: all var(--transition-fast);
 }
 
 .detection-item:hover {
-  background-color: rgba(39, 174, 96, 0.08);
+  background-color: var(--primary-light);
 }
 
 .detection-item:last-child {
@@ -858,42 +869,58 @@ const handleRedetect = () => {
 }
 
 .item-name {
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--text-primary);
 }
 
 .item-confidence {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--primary-color);
   font-weight: 600;
 }
 
 /* 操作按钮卡片 */
 .action-card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: var(--card-shadow);
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
 }
 
 .action-buttons {
   display: flex;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .btn-secondary {
   flex: 1;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  font-size: var(--text-sm);
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-color);
 }
 
 .btn-primary {
   flex: 2;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  font-size: var(--text-sm);
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  border-color: var(--primary-dark);
 }
 
 /* 图片查看器 */
@@ -909,7 +936,7 @@ const handleRedetect = () => {
   align-items: center;
   justify-content: center;
   opacity: 1;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--transition-fast);
 }
 
 .image-viewer {
@@ -917,7 +944,7 @@ const handleRedetect = () => {
   max-width: 1200px;
   height: 90vh;
   background: #1a1a1a;
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -927,26 +954,26 @@ const handleRedetect = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
+  padding: var(--spacing-md) var(--spacing-lg);
   background: #2a2a2a;
   border-bottom: 1px solid #3a3a3a;
 }
 
 .viewer-title {
-  font-size: 15px;
-  color: #ffffff;
+  font-size: var(--text-sm);
+  color: white;
   font-weight: 500;
 }
 
 .viewer-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .zoom-value {
-  font-size: 13px;
-  color: #9ca3af;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
   min-width: 50px;
   text-align: center;
 }
@@ -956,7 +983,7 @@ const handleRedetect = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: var(--spacing-lg);
   overflow: hidden;
   background: #0a0a0a;
 }
@@ -965,7 +992,7 @@ const handleRedetect = () => {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  transition: transform 0.1s ease;
+  transition: transform var(--transition-fast);
 }
 
 .viewer-image:active {
@@ -975,11 +1002,11 @@ const handleRedetect = () => {
 .viewer-hint {
   display: flex;
   justify-content: center;
-  gap: 16px;
-  padding: 12px;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
   background: #2a2a2a;
-  color: #6b7280;
-  font-size: 12px;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
 }
 
 .viewer-hint span {
@@ -1011,7 +1038,7 @@ const handleRedetect = () => {
 
   .info-content {
     flex-direction: column;
-    gap: 10px;
+    gap: var(--spacing-sm);
   }
 
   .action-buttons {
@@ -1027,7 +1054,7 @@ const handleRedetect = () => {
 
 @media (max-width: 480px) {
   .page-title {
-    font-size: 22px;
+    font-size: var(--text-2xl);
   }
 
   .image-card {
@@ -1038,7 +1065,7 @@ const handleRedetect = () => {
   .info-card,
   .result-card,
   .action-card {
-    padding: 16px;
+    padding: var(--spacing-md);
   }
 }
 </style>
