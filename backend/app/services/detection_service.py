@@ -281,20 +281,22 @@ class DetectionService:
         初始化类别名称映射
 
         功能：
-        - 定义 RSOD 数据集的 4 类目标名称
+        - 定义钢材表面缺陷数据集的 6 类目标名称
         - 类别 ID 从 0 开始
 
         说明：
-        - RSOD 数据集包含 4 种遥感目标
-        - 支持飞机、油罐、立交桥、操场的检测
+        - 钢材表面缺陷数据集包含 6 种缺陷类型
+        - 支持裂纹、夹杂物、斑点、麻面、轧入氧化皮、划痕的检测
         """
-        # RSOD 数据集 4 类目标名称映射
+        # 钢材表面缺陷数据集 6 类目标名称映射
         # 类别 ID：目标名称
         self.class_names = {
-            0: "aircraft",    # 飞机
-            1: "oiltank",     # 油罐
-            2: "overpass",    # 立交桥
-            3: "playground",  # 操场
+            0: "crazing",            # 裂纹
+            1: "inclusion",          # 夹杂物
+            2: "patches",            # 斑点
+            3: "pitted_surface",     # 麻面
+            4: "rolled_in_scale",    # 轧入氧化皮
+            5: "scratches",          # 划痕
         }
 
     def get_class_chinese_name(self, class_name: str) -> str:
@@ -308,10 +310,12 @@ class DetectionService:
             str: 类别中文名称
         """
         chinese_names = {
-            "aircraft": "飞机",
-            "oiltank": "油罐",
-            "overpass": "立交桥",
-            "playground": "操场"
+            "crazing": "裂纹",
+            "inclusion": "夹杂物",
+            "patches": "斑点",
+            "pitted_surface": "麻面",
+            "rolled_in_scale": "轧入氧化皮",
+            "scratches": "划痕"
         }
         return chinese_names.get(class_name, class_name)
 

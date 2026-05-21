@@ -32,7 +32,7 @@ export const getDetectionDetail = (id) => {
 // 获取目标库列表
 export const getTargetList = () => {
   return request({
-    url: "/targets/list",
+    url: "/detection/targets/list",
     method: "get",
   });
 };

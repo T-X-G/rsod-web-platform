@@ -90,13 +90,9 @@
 
         <!-- 图片对比区域 -->
         <div class="image-compare">
-          <div class="image-card" @click="hasImage && originalImage && openImageViewer(originalImage, '原始图片')">
+          <div class="image-card">
             <template v-if="hasImage && originalImage">
               <img :src="originalImage" alt="原始图片" class="compare-image" />
-              <div class="image-overlay">
-                <el-icon class="zoom-icon"><ZoomIn /></el-icon>
-                <span class="overlay-text">点击放大查看</span>
-              </div>
             </template>
             <template v-else>
               <div class="image-placeholder">
@@ -107,14 +103,10 @@
             </template>
             <div class="image-label">原始图片</div>
           </div>
-          <div class="image-card" @click="hasImage && resultImage && openImageViewer(resultImage, '检测结果')">
+          <div class="image-card">
             <template v-if="hasImage && resultImage">
               <img :src="resultImage" alt="检测结果" class="compare-image" />
               <div class="detection-mark" v-if="detectionResult"></div>
-              <div class="image-overlay">
-                <el-icon class="zoom-icon"><ZoomIn /></el-icon>
-                <span class="overlay-text">点击放大查看</span>
-              </div>
             </template>
             <template v-else>
               <div class="image-placeholder">
@@ -128,13 +120,10 @@
         </div>
       </div>
 
-      <!-- 模型信息 -->
-      <div class="info-card">
-        <div class="card-header">
-          <el-icon><View /></el-icon>
-          <span class="card-title">检测模型信息</span>
-        </div>
-        <div class="info-content">
+      <!-- 右侧信息面板 -->
+      <div class="right-panel">
+        <!-- 模型信息 -->
+        <div class="info-card">
           <div class="info-item">
             <span class="info-label">检测模型</span>
             <span class="info-value">{{ selectedModel }}</span>
@@ -144,60 +133,58 @@
             <span class="info-value">v1.0.0</span>
           </div>
         </div>
-      </div>
 
-      <!-- 识别清单 -->
-      <div class="result-card">
-        <div class="card-header">
-          <el-icon><List /></el-icon>
-          <span class="card-title">识别清单</span>
-        </div>
-        <div v-if="!hasImage" class="empty-state">
-          <el-icon class="empty-icon"><Upload /></el-icon>
-          <p class="empty-text">请上传图片开始检测</p>
-          <p class="empty-desc">上传钢材表面图片以识别缺陷</p>
-        </div>
-        <div
-          v-else-if="!detectionResult || detectionResult.total_objects === 0"
-          class="empty-state"
-        >
-          <el-icon class="empty-icon"><CircleCheck /></el-icon>
-          <p class="empty-text">未检测到目标</p>
-          <p class="empty-desc">影像无异常目标</p>
-        </div>
-        <div v-else class="detection-list">
+        <!-- 识别清单 -->
+        <div class="result-card">
+          <div class="card-header">
+            <el-icon><List /></el-icon>
+            <span class="card-title">识别清单</span>
+          </div>
+          <div v-if="!hasImage" class="empty-state">
+            <el-icon class="empty-icon"><Upload /></el-icon>
+            <p class="empty-text">请上传图片开始检测</p>
+            <p class="empty-desc">上传钢材表面图片以识别缺陷</p>
+          </div>
           <div
-            v-for="(box, index) in detectionResult.boxes"
-            :key="index"
-            class="detection-item"
+            v-else-if="!detectionResult || detectionResult.total_objects === 0"
+            class="empty-state"
           >
-            <span class="item-name">{{ box.class_name }}</span>
-            <span class="item-confidence"
-              >{{ (box.confidence * 100).toFixed(1) }}%</span
+            <el-icon class="empty-icon"><CircleCheck /></el-icon>
+            <p class="empty-text">未检测到目标</p>
+            <p class="empty-desc">影像无异常目标</p>
+          </div>
+          <div v-else class="detection-list">
+            <div
+              v-for="(box, index) in detectionResult.boxes"
+              :key="index"
+              class="detection-item"
             >
+              <span class="item-name">{{ box.class_name }}</span>
+              <span class="item-confidence"
+                >{{ (box.confidence * 100).toFixed(1) }}%</span
+              >
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- AI诊断建议 -->
-      <div class="result-card">
-        <div class="card-header">
-          <el-icon><ChatDotRound /></el-icon>
-          <span class="card-title">AI 诊断建议</span>
+        <!-- AI诊断建议 -->
+        <div class="result-card">
+          <div class="card-header">
+            <el-icon><ChatDotRound /></el-icon>
+            <span class="card-title">AI 诊断建议</span>
+          </div>
+          <div class="diagnosis-content">
+            <p v-if="!hasImage">上传图片后将自动生成诊断建议</p>
+            <p v-else-if="!detectionResult">未检测到指定目标</p>
+            <p v-else>
+              检测到 {{ detectionResult.total_objects }} 个目标，耗时
+              {{ detectionResult.detection_time }}s。 模型:
+              {{ detectionResult.model_name }}
+            </p>
+          </div>
         </div>
-        <div class="diagnosis-content">
-          <p v-if="!hasImage">上传图片后将自动生成诊断建议</p>
-          <p v-else-if="!detectionResult">未检测到指定目标</p>
-          <p v-else>
-            检测到 {{ detectionResult.total_objects }} 个目标，耗时
-            {{ detectionResult.detection_time }}s。 模型:
-            {{ detectionResult.model_name }}
-          </p>
-        </div>
-      </div>
 
-      <!-- 操作按钮 -->
-      <div class="action-card">
+        <!-- 操作按钮 -->
         <div class="action-buttons">
           <el-button
             size="default"
@@ -213,59 +200,6 @@
         </div>
       </div>
     </div>
-
-    <!-- 图片查看器弹窗 -->
-    <Teleport to="body">
-      <div
-        v-if="showImageViewer"
-        class="image-viewer-overlay"
-        @click="closeImageViewer"
-      >
-        <div class="image-viewer">
-          <div class="viewer-header">
-            <span class="viewer-title">{{ viewerTitle }}</span>
-            <div class="viewer-controls">
-              <el-button size="small" @click.stop="zoomOut">
-                <el-icon><ZoomOut /></el-icon>
-              </el-button>
-              <span class="zoom-value">{{ Math.round(imageScale * 100) }}%</span>
-              <el-button size="small" @click.stop="zoomIn">
-                <el-icon><ZoomIn /></el-icon>
-              </el-button>
-              <el-button size="small" @click.stop="resetZoom">
-                重置
-              </el-button>
-              <el-button size="small" @click.stop="closeImageViewer">
-                <el-icon><Close /></el-icon>
-              </el-button>
-            </div>
-          </div>
-          <div
-            class="viewer-content"
-            @mousedown="handleMouseDown"
-            @mousemove="handleMouseMove"
-            @mouseup="handleMouseUp"
-            @mouseleave="handleMouseUp"
-            @wheel="handleWheel"
-          >
-            <img
-              :src="viewerImageUrl"
-              :alt="viewerTitle"
-              class="viewer-image"
-              :style="{
-                transform: `scale(${imageScale}) translate(${imageOffsetX / imageScale}px, ${imageOffsetY / imageScale}px)`,
-                cursor: imageScale > 1 ? 'grab' : 'default'
-              }"
-            />
-          </div>
-          <div class="viewer-hint">
-            <span>滚轮缩放</span>
-            <span>|</span>
-            <span>拖拽平移</span>
-          </div>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 
@@ -284,7 +218,7 @@ import {
   Minus,
   Upload,
   View,
-  Close,
+  X,
   ZoomIn,
   ZoomOut,
 } from "@element-plus/icons-vue";
@@ -498,21 +432,15 @@ const handleRedetect = () => {
 /* 功能选项卡 */
 .function-tabs {
   display: flex;
-  gap: 16px;
-  margin-bottom: 32px;
-  justify-content: center;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .function-tab {
   flex: 1;
-  min-width: 200px;
-  max-width: 280px;
   display: flex;
   align-items: center;
-  padding: 20px 24px;
+  padding: 16px 20px;
   background-color: #ffffff;
   border-radius: 12px;
   cursor: pointer;
@@ -520,7 +448,6 @@ const handleRedetect = () => {
   border: 2px solid transparent;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--card-shadow);
 }
 
 .file-input {
@@ -534,19 +461,17 @@ const handleRedetect = () => {
 
 .function-tab:hover {
   background-color: var(--primary-light);
-  box-shadow: 0 4px 16px rgba(39, 174, 96, 0.15);
 }
 
 .function-tab.active {
   background-color: var(--primary-light);
   border-color: var(--primary-color);
-  box-shadow: 0 4px 16px rgba(39, 174, 96, 0.2);
 }
 
 .tab-icon {
-  font-size: 24px;
+  font-size: 18px;
   color: var(--primary-color);
-  margin-right: 14px;
+  margin-right: 12px;
   flex-shrink: 0;
 }
 
@@ -556,7 +481,7 @@ const handleRedetect = () => {
 }
 
 .tab-text {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.4;
@@ -571,23 +496,21 @@ const handleRedetect = () => {
 /* 主内容区域 */
 .main-content {
   display: flex;
-  flex-direction: column;
   gap: 24px;
 }
 
-/* 检测预览面板 */
 .left-panel {
+  flex: 1;
   background-color: #ffffff;
   border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--card-shadow);
+  padding: 20px;
 }
 
 .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .panel-title {
@@ -605,7 +528,7 @@ const handleRedetect = () => {
 .toolbar {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .toolbar .el-button {
@@ -622,22 +545,16 @@ const handleRedetect = () => {
 /* 图片对比区域 */
 .image-compare {
   display: flex;
-  gap: 20px;
-  height: 360px;
+  gap: 16px;
+  height: 320px;
 }
 
 .image-card {
   flex: 1;
   position: relative;
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
   background-color: #f9fafb;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.image-card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .image-placeholder {
@@ -652,20 +569,20 @@ const handleRedetect = () => {
 }
 
 .placeholder-icon {
-  font-size: 56px;
+  font-size: 48px;
   color: #d1d5db;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .placeholder-text {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: #6b7280;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .placeholder-desc {
-  font-size: 13px;
+  font-size: 12px;
   color: #9ca3af;
 }
 
@@ -675,88 +592,55 @@ const handleRedetect = () => {
   object-fit: cover;
 }
 
-.image-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: all 0.3s;
-  pointer-events: none;
-}
-
-.image-card:hover .image-overlay {
-  background: rgba(0, 0, 0, 0.4);
-  opacity: 1;
-}
-
-.zoom-icon {
-  font-size: 32px;
-  color: #ffffff;
-  margin-bottom: 8px;
-}
-
-.overlay-text {
-  font-size: 14px;
-  color: #ffffff;
-}
-
 .image-label {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.6);
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.5);
   color: #ffffff;
   font-size: 13px;
 }
 
 .detection-mark {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 40px;
-  height: 40px;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background-color: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1;
 }
 
 .detection-mark::after {
   content: "✓";
   color: #ffffff;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
 }
 
-/* 信息卡片 */
+/* 右侧面板 */
+.right-panel {
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .info-card {
   background-color: #ffffff;
   border-radius: 12px;
-  padding: 20px;
-  box-shadow: var(--card-shadow);
-}
-
-.info-content {
-  display: flex;
-  gap: 40px;
+  padding: 16px;
 }
 
 .info-item {
-  flex: 1;
   display: flex;
   justify-content: space-between;
-  padding: 10px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -765,38 +649,36 @@ const handleRedetect = () => {
 }
 
 .info-label {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
 .info-value {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
 }
 
-/* 结果卡片 */
 .result-card {
   background-color: #ffffff;
   border-radius: 12px;
-  padding: 20px;
-  box-shadow: var(--card-shadow);
+  padding: 16px;
 }
 
 .card-header {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .card-header .el-icon {
-  font-size: 18px;
+  font-size: 16px;
   color: var(--primary-color);
-  margin-right: 10px;
+  margin-right: 8px;
 }
 
 .card-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -805,20 +687,20 @@ const handleRedetect = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 0;
+  padding: 32px 0;
 }
 
 .empty-icon {
-  font-size: 56px;
+  font-size: 48px;
   color: var(--success-color);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .empty-text {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .empty-desc {
@@ -827,14 +709,13 @@ const handleRedetect = () => {
 }
 
 .diagnosis-content {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
-  line-height: 1.8;
-  padding: 10px 0;
+  line-height: 1.6;
 }
 
 .detection-list {
-  max-height: 240px;
+  max-height: 200px;
   overflow-y: auto;
 }
 
@@ -842,15 +723,10 @@ const handleRedetect = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
+  padding: 8px 12px;
   background-color: #f9fafb;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  transition: all 0.2s;
-}
-
-.detection-item:hover {
-  background-color: rgba(39, 174, 96, 0.08);
+  border-radius: 6px;
+  margin-bottom: 8px;
 }
 
 .detection-item:last-child {
@@ -858,187 +734,33 @@ const handleRedetect = () => {
 }
 
 .item-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
 }
 
 .item-confidence {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--primary-color);
   font-weight: 600;
 }
 
-/* 操作按钮卡片 */
-.action-card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: var(--card-shadow);
-}
-
 .action-buttons {
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .btn-secondary {
   flex: 1;
   border-radius: 8px;
-  padding: 12px;
+  padding: 10px;
   font-size: 14px;
 }
 
 .btn-primary {
   flex: 2;
   border-radius: 8px;
-  padding: 12px;
+  padding: 10px;
   font-size: 14px;
-}
-
-/* 图片查看器 */
-.image-viewer-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 1;
-  transition: opacity 0.2s ease;
-}
-
-.image-viewer {
-  width: 90%;
-  max-width: 1200px;
-  height: 90vh;
-  background: #1a1a1a;
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.viewer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  background: #2a2a2a;
-  border-bottom: 1px solid #3a3a3a;
-}
-
-.viewer-title {
-  font-size: 15px;
-  color: #ffffff;
-  font-weight: 500;
-}
-
-.viewer-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.zoom-value {
-  font-size: 13px;
-  color: #9ca3af;
-  min-width: 50px;
-  text-align: center;
-}
-
-.viewer-content {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  overflow: hidden;
-  background: #0a0a0a;
-}
-
-.viewer-image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  transition: transform 0.1s ease;
-}
-
-.viewer-image:active {
-  cursor: grabbing;
-}
-
-.viewer-hint {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  padding: 12px;
-  background: #2a2a2a;
-  color: #6b7280;
-  font-size: 12px;
-}
-
-.viewer-hint span {
-  display: flex;
-  align-items: center;
-}
-
-/* 响应式适配 */
-@media (max-width: 768px) {
-  .function-tabs {
-    flex-direction: column;
-    align-items: center;
-    max-width: 100%;
-  }
-
-  .function-tab {
-    width: 100%;
-    max-width: none;
-  }
-
-  .image-compare {
-    flex-direction: column;
-    height: auto;
-  }
-
-  .image-card {
-    height: 240px;
-  }
-
-  .info-content {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-  }
-
-  .btn-secondary,
-  .btn-primary {
-    flex: none;
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-title {
-    font-size: 22px;
-  }
-
-  .image-card {
-    height: 200px;
-  }
-
-  .left-panel,
-  .info-card,
-  .result-card,
-  .action-card {
-    padding: 16px;
-  }
 }
 </style>
