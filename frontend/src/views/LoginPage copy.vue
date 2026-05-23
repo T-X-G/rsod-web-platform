@@ -2,7 +2,10 @@
   <div class="login-container">
     <div class="login-card">
       <div class="login-header">
-        <h1 class="login-title" s>钢材表面缺陷智能检测平台</h1>
+        <div class="logo-icon">
+          <el-icon :size="40" color="#27ae60"><Picture /></el-icon>
+        </div>
+        <h1 class="login-title">钢材表面缺陷智能检测平台</h1>
         <p class="login-subtitle">专业钢材检测 · 精准缺陷识别</p>
       </div>
 
@@ -39,18 +42,11 @@
 
         <el-form-item class="form-actions">
           <el-checkbox v-model="loginForm.remember">记住我</el-checkbox>
-          <router-link to="/forgot-password" class="forgot-password"
-            >忘记密码?</router-link
-          >
+          <router-link to="/forgot-password" class="forgot-password">忘记密码?</router-link>
         </el-form-item>
 
         <el-form-item>
-          <el-button
-            type="primary"
-            size="large"
-            class="login-btn"
-            @click="handleLogin"
-          >
+          <el-button type="primary" size="large" class="login-btn" @click="handleLogin">
             登录
           </el-button>
         </el-form-item>
@@ -109,99 +105,40 @@ const handleLogin = () => {
   align-items: center;
   justify-content: center;
   /* 修改点：蓝紫色渐变星空背景 */
-  background: linear-gradient(
-    135deg,
-    #1a1a2e 0%,
-    #16213e 30%,
-    #0f3460 60%,
-    #533483 100%
-  );
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 60%, #533483 100%);
   position: relative;
   overflow: hidden;
 }
 
 /* 修改点：添加星星效果 */
 .login-container::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-image:
-    radial-gradient(
-      2px 2px at 20px 30px,
-      rgba(255, 255, 255, 0.8),
-      transparent
-    ),
-    radial-gradient(
-      2px 2px at 40px 70px,
-      rgba(255, 255, 255, 0.5),
-      transparent
-    ),
-    radial-gradient(
-      1px 1px at 90px 40px,
-      rgba(255, 255, 255, 0.6),
-      transparent
-    ),
-    radial-gradient(
-      2px 2px at 130px 80px,
-      rgba(255, 255, 255, 0.4),
-      transparent
-    ),
-    radial-gradient(
-      1px 1px at 160px 120px,
-      rgba(255, 255, 255, 0.7),
-      transparent
-    ),
-    radial-gradient(
-      2px 2px at 200px 50px,
-      rgba(255, 255, 255, 0.5),
-      transparent
-    ),
-    radial-gradient(
-      1px 1px at 250px 160px,
-      rgba(255, 255, 255, 0.6),
-      transparent
-    ),
-    radial-gradient(
-      2px 2px at 300px 90px,
-      rgba(255, 255, 255, 0.4),
-      transparent
-    ),
-    radial-gradient(
-      1px 1px at 350px 200px,
-      rgba(255, 255, 255, 0.7),
-      transparent
-    ),
-    radial-gradient(
-      2px 2px at 400px 150px,
-      rgba(255, 255, 255, 0.5),
-      transparent
-    ),
-    radial-gradient(
-      1px 1px at 450px 300px,
-      rgba(255, 255, 255, 0.6),
-      transparent
-    ),
-    radial-gradient(
-      2px 2px at 500px 200px,
-      rgba(255, 255, 255, 0.4),
-      transparent
-    );
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 160px 120px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 200px 50px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 250px 160px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(2px 2px at 300px 90px, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 350px 200px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 400px 150px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 450px 300px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(2px 2px at 500px 200px, rgba(255,255,255,0.4), transparent);
   background-repeat: repeat;
   background-size: 500px 350px;
   animation: twinkle 8s ease-in-out infinite;
 }
 
 @keyframes twinkle {
-  0%,
-  100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 /* 修改点：玻璃拟态卡片样式 */
@@ -215,7 +152,7 @@ const handleLogin = () => {
   -webkit-backdrop-filter: blur(20px);
   border-radius: 24px;
   /* 修改点：轻微发光阴影 */
-  box-shadow:
+  box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),
     0 0 60px rgba(118, 75, 162, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -227,6 +164,22 @@ const handleLogin = () => {
 .login-header {
   text-align: center;
   margin-bottom: 36px;
+}
+
+.logo-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  /* 修改点：logo图标玻璃拟态效果 */
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 /* 修改点：标题样式 - 白色粗体 */
