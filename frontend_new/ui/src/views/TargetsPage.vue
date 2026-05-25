@@ -72,7 +72,7 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <button
-            v-for="defect in allDefects"
+            v-for="defect in filteredDefects"
             :key="defect.id"
             @click="selectDefect(defect.id)"
             :class="[
