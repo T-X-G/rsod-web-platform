@@ -247,7 +247,7 @@ class Settings(BaseModel):
     # 目标检测置信度阈值
     # 只有检测框置信度 >= 此值的结果才会被保留
     # 范围：0.0 - 1.0，默认 0.5
-    confidence_threshold: float = float(os.getenv("CONFIDENCE_THRESHOLD", "0.5"))
+    confidence_threshold: float = float(os.getenv("CONFIDENCE_THRESHOLD", "0.15"))
 
     # 非极大值抑制（Non-Maximum Suppression）IOU 阈值
     # 用于去除重叠的检测框，只保留最优的检测结果

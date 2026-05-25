@@ -118,11 +118,18 @@ class DetectionService:
         # 类别名称映射字典（RSOD 数据集 4 类）
         self.class_names = {}
 
-        # 加载 YOLO 模型（智能版本检查）
-        self._load_model_smart()
+        # 直接加载本地模型（跳过 MinIO 版本检查）
+        self._load_model_direct()
 
         # 初始化类别名称映射
         self._init_class_names()
+
+    def _load_model_direct(self):
+        """直接加载本地模型，跳过 MinIO 版本检查"""
+        if not os.path.exists(settings.yolo_model_path):
+            raise FileNotFoundError(f"模型文件未找到: {settings.yolo_model_path}")
+        self.model = YOLO(settings.yolo_model_path)
+        logger.info(f"模型加载成功: {settings.yolo_model_path}")
 
     def _save_local_model_info(self, model_info: dict):
         """
@@ -357,13 +364,23 @@ class DetectionService:
         # 生成唯一的检测 ID
         detection_id = str(uuid.uuid4())
 
-        # 调用 YOLO 模型进行预测
+        # 调用 YOLO 模型进行预测（极低阈值保留所有候选框）
+        MIN_CONF = 0.05
+        CLASS_THRESHOLDS = {
+            "crazing": 0.12,
+            "rolled-in_scale": 0.18,
+            "inclusion": 0.20,
+            "scratches": 0.25,
+            "patches": 0.30,
+            "pitted_surface": 0.30,
+        }
         results = self.model.predict(
             source=image_path,
-            conf=settings.confidence_threshold,
-            iou=settings.iou_threshold,
+            conf=MIN_CONF,
+            iou=0.35,
             save=False
         )
+
 
         # 解析检测结果
         boxes = []  # 检测框列表
@@ -384,6 +401,11 @@ class DetectionService:
 
                 # 获取类别名称
                 class_name = self.class_names.get(class_id, f"class_{class_id}")
+
+                # 类别级阈值过滤
+                min_conf = CLASS_THRESHOLDS.get(class_name, 0.30)
+                if confidence < min_conf:
+                    continue
 
                 # 获取中文名称
                 chinese_name = self.get_class_chinese_name(class_name)
