@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from "vue";
 
 interface Particle {
-  id: number
-  x: number
-  y: number
-  size: number
-  duration: number
-  delay: number
-  color: string
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  duration: number;
+  delay: number;
+  color: string;
 }
 
-const particles = ref<Particle[]>([])
+const particles = ref<Particle[]>([]);
 
 const colors = [
-  'rgba(0, 212, 255, 0.6)',
-  'rgba(6, 182, 212, 0.5)',
-  'rgba(0, 212, 255, 0.4)',
-  'rgba(255, 107, 53, 0.3)',
-]
+  "rgba(0, 212, 255, 0.6)",
+  "rgba(6, 182, 212, 0.5)",
+  "rgba(0, 212, 255, 0.4)",
+  "rgba(255, 107, 53, 0.3)",
+];
 
 const generateParticles = () => {
-  const newParticles: Particle[] = []
+  const newParticles: Particle[] = [];
   for (let i = 0; i < 50; i++) {
     newParticles.push({
       id: i,
@@ -30,15 +30,15 @@ const generateParticles = () => {
       size: Math.random() * 4 + 2,
       duration: Math.random() * 20 + 15,
       delay: Math.random() * 20,
-      color: colors[Math.floor(Math.random() * colors.length)]
-    })
+      color: colors[Math.floor(Math.random() * colors.length)],
+    });
   }
-  particles.value = newParticles
-}
+  particles.value = newParticles;
+};
 
 onMounted(() => {
-  generateParticles()
-})
+  generateParticles();
+});
 </script>
 
 <template>
@@ -55,7 +55,7 @@ onMounted(() => {
         background: particle.color,
         boxShadow: `0 0 ${particle.size * 2}px ${particle.color}`,
         animation: `particle ${particle.duration}s linear infinite`,
-        animationDelay: `-${particle.delay}s`
+        animationDelay: `-${particle.delay}s`,
       }"
     ></div>
   </div>

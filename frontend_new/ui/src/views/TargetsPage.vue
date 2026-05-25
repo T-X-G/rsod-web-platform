@@ -9,7 +9,9 @@
           <span class="text-primary">目标库</span>
         </div>
         <h1 class="text-3xl font-bold text-white mb-2">缺陷检测库</h1>
-        <p class="text-gray-400">平台支持检测的所有钢材表面缺陷类别，点击任何缺陷可查看详细信息</p>
+        <p class="text-gray-400">
+          平台支持检测的所有钢材表面缺陷类别，点击任何缺陷可查看详细信息
+        </p>
       </div>
 
       <!-- Search & Stats -->
@@ -40,25 +42,37 @@
         </div>
 
         <!-- Statistics -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-primary/10">
+        <div
+          class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-primary/10"
+        >
           <div class="p-4 bg-white/5 rounded-xl border border-primary/10">
             <div class="text-gray-400 text-xs mb-2">缺陷总数</div>
             <div class="text-3xl font-bold text-white">{{ totalDefects }}</div>
-            <div class="text-primary text-xs mt-1">共 {{ allDefects.length }} 种</div>
+            <div class="text-primary text-xs mt-1">
+              共 {{ allDefects.length }} 种
+            </div>
           </div>
-          <div class="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
+          <div
+            class="p-4 bg-green-500/10 rounded-xl border border-green-500/20"
+          >
             <div class="text-gray-400 text-xs mb-2">检测支持</div>
             <div class="text-3xl font-bold text-green-400">100%</div>
             <div class="text-green-400 text-xs mt-1">全部缺陷</div>
           </div>
-          <div class="p-4 bg-orange-500/10 rounded-xl border border-orange-500/20">
+          <div
+            class="p-4 bg-orange-500/10 rounded-xl border border-orange-500/20"
+          >
             <div class="text-gray-400 text-xs mb-2">高风险</div>
-            <div class="text-3xl font-bold text-orange-400">{{ highRiskCount }}</div>
+            <div class="text-3xl font-bold text-orange-400">
+              {{ highRiskCount }}
+            </div>
             <div class="text-orange-400 text-xs mt-1">需重点关注</div>
           </div>
           <div class="p-4 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
             <div class="text-gray-400 text-xs mb-2">推荐模型</div>
-            <div class="text-3xl font-bold text-cyan-400">{{ recommendedModelCount }}</div>
+            <div class="text-3xl font-bold text-cyan-400">
+              {{ recommendedModelCount }}
+            </div>
             <div class="text-cyan-400 text-xs mt-1">已配置</div>
           </div>
         </div>
@@ -79,7 +93,7 @@
               'p-4 rounded-xl transition-all duration-300 text-left group relative overflow-hidden',
               selectedDefectId === defect.id
                 ? 'bg-primary/30 border-2 border-primary ring-2 ring-primary/50'
-                : 'bg-white/5 border border-primary/20 hover:border-primary/50 hover:bg-white/10'
+                : 'bg-white/5 border border-primary/20 hover:border-primary/50 hover:bg-white/10',
             ]"
           >
             <!-- Background glow effect for selected -->
@@ -90,16 +104,37 @@
 
             <div class="relative">
               <div class="flex items-center justify-between mb-2">
-                <h3 class="font-bold text-white text-base">{{ defect.name }}</h3>
-                <span :class="['text-xs px-2 py-1 rounded-full font-medium', getRiskBadgeClass(defect.riskLevel)]">
+                <h3 class="font-bold text-white text-base">
+                  {{ defect.name }}
+                </h3>
+                <span
+                  :class="[
+                    'text-xs px-2 py-1 rounded-full font-medium',
+                    getRiskBadgeClass(defect.riskLevel),
+                  ]"
+                >
                   {{ defect.riskLevel }}级
                 </span>
               </div>
-              <p class="text-xs text-gray-400 italic mb-3">{{ defect.englishName }}</p>
-              <div class="flex items-center gap-2 text-primary group-hover:text-cyan-400 transition-colors">
+              <p class="text-xs text-gray-400 italic mb-3">
+                {{ defect.englishName }}
+              </p>
+              <div
+                class="flex items-center gap-2 text-primary group-hover:text-cyan-400 transition-colors"
+              >
                 <span class="text-xs font-medium">{{ defect.category }}</span>
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+                  class="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </div>
             </div>
@@ -128,7 +163,9 @@
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <h3 class="text-xl font-semibold text-white mb-2">选择一个缺陷查看详情</h3>
+          <h3 class="text-xl font-semibold text-white mb-2">
+            选择一个缺陷查看详情
+          </h3>
           <p class="text-gray-400 text-center max-w-2xl">
             从上方缺陷分类中选择任意一个缺陷类别，即可查看包括产生原因、风险影响、预防措施、示例图片、推荐检测模型等详细信息。
           </p>
@@ -140,7 +177,9 @@
         <h3 class="text-lg font-semibold text-white mb-4">检测指南</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="flex gap-4">
-            <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-sm">
+            <div
+              class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-sm"
+            >
               1
             </div>
             <div>
@@ -151,7 +190,9 @@
             </div>
           </div>
           <div class="flex gap-4">
-            <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-sm">
+            <div
+              class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-sm"
+            >
               2
             </div>
             <div>
@@ -162,7 +203,9 @@
             </div>
           </div>
           <div class="flex gap-4">
-            <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-sm">
+            <div
+              class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-sm"
+            >
               3
             </div>
             <div>
@@ -173,7 +216,9 @@
             </div>
           </div>
           <div class="flex gap-4">
-            <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-sm">
+            <div
+              class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-sm"
+            >
               4
             </div>
             <div>
@@ -213,10 +258,10 @@ const filteredDefects = computed(() => {
 
   const query = searchQuery.value.toLowerCase();
   return allDefects.value.filter(
-    defect =>
+    (defect) =>
       defect.name.toLowerCase().includes(query) ||
       defect.englishName.toLowerCase().includes(query) ||
-      defect.category.toLowerCase().includes(query)
+      defect.category.toLowerCase().includes(query),
   );
 });
 
@@ -224,12 +269,12 @@ const filteredDefects = computed(() => {
 const totalDefects = computed(() => allDefects.value.length);
 
 const highRiskCount = computed(
-  () => allDefects.value.filter(d => d.riskLevel === "高").length
+  () => allDefects.value.filter((d) => d.riskLevel === "高").length,
 );
 
 const recommendedModelCount = computed(() => {
   let total = 0;
-  allDefects.value.forEach(d => {
+  allDefects.value.forEach((d) => {
     total += d.recommendedModels.length;
   });
   return total;
@@ -237,7 +282,8 @@ const recommendedModelCount = computed(() => {
 
 // Select defect handler
 const selectDefect = (defectId: number) => {
-  selectedDefectId.value = selectedDefectId.value === defectId ? null : defectId;
+  selectedDefectId.value =
+    selectedDefectId.value === defectId ? null : defectId;
 };
 
 // Get risk badge class
@@ -245,7 +291,7 @@ const getRiskBadgeClass = (riskLevel: "低" | "中" | "高") => {
   const classes = {
     低: "bg-green-500/20 text-green-400",
     中: "bg-orange-500/20 text-orange-400",
-    高: "bg-red-500/20 text-red-400"
+    高: "bg-red-500/20 text-red-400",
   };
   return classes[riskLevel];
 };
