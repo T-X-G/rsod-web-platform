@@ -20,24 +20,116 @@
 from pydantic import BaseModel
 
 # 导入类型提示 List，用于定义列表类型
-from typing import List
+from typing import List, Optional
 
 # 导入 os 模块，用于读取操作系统环境变量
 import os
 
-# 导入 Path 模块，用于获取文件路径
 from pathlib import Path
 
 # 导入 dotenv 模块的 load_dotenv 函数，用于加载 .env 文件
 from dotenv import load_dotenv
 
+from app.utils.paths import Paths, find_project_root
+
 # 获取 backend 目录路径（config.py 在 backend/app/ 下）
-# 向上两级到达 backend 目录
-BACKEND_DIR = Path(__file__).resolve().parent.parent
+BACKEND_DIR = find_project_root(__file__)
 
 # 加载 .env 文件到环境变量
 # 使用 backend 目录下的 .env 文件
 load_dotenv(BACKEND_DIR / ".env")
+
+
+def _env_first(*names: str, default: Optional[str] = None) -> Optional[str]:
+    """Return the first non-empty environment variable value."""
+    for name in names:
+        value = os.getenv(name)
+        if value is not None and value != "":
+            return value
+    return default
+
+
+def _resolve_backend_path(value: Optional[str], fallback: Path) -> str:
+    """Resolve relative paths against the backend root for portability."""
+    raw_value = value.strip() if value else ""
+    if not raw_value:
+        return str(fallback)
+
+    candidate = Path(raw_value).expanduser()
+    if not candidate.is_absolute():
+        candidate = (BACKEND_DIR / candidate).resolve()
+    else:
+        candidate = candidate.resolve()
+    return str(candidate)
+
+
+def _minio_host_port() -> tuple[str, int]:
+    endpoint = _env_first("MINIO_ENDPOINT", default="localhost:9000")
+    default_host = "localhost"
+    default_port = 9000
+    if endpoint and ":" in endpoint:
+        host_part, port_part = endpoint.rsplit(":", 1)
+        try:
+            default_port = int(port_part)
+        except ValueError:
+            default_port = 9000
+        default_host = host_part or default_host
+
+    host = _env_first("MINIO_HOST", default=default_host) or default_host
+    port = int(_env_first("MINIO_PORT", default=str(default_port)) or default_port)
+    return host, port
+
+
+MINIO_HOST, MINIO_PORT = _minio_host_port()
+
+
+class TargetClassConfig(BaseModel):
+    """单个缺陷类别的展示配置。"""
+
+    id: int
+    name: str
+    chinese_name: str
+    description: str = ""
+
+
+DEFAULT_TARGET_CATALOG = [
+    TargetClassConfig(
+        id=0,
+        name="Crazing",
+        chinese_name="龟裂",
+        description="钢表面出现细密裂纹的缺陷。",
+    ),
+    TargetClassConfig(
+        id=1,
+        name="Inclusion",
+        chinese_name="夹杂",
+        description="钢表面或内部存在非金属夹杂物的缺陷。",
+    ),
+    TargetClassConfig(
+        id=2,
+        name="Patches",
+        chinese_name="斑块",
+        description="钢表面存在局部斑块状异常区域的缺陷。",
+    ),
+    TargetClassConfig(
+        id=3,
+        name="Pitted Surface",
+        chinese_name="麻点",
+        description="钢表面出现点状凹坑的缺陷。",
+    ),
+    TargetClassConfig(
+        id=4,
+        name="Rolled-in Scale",
+        chinese_name="氧化皮压入",
+        description="轧制过程中氧化皮压入钢表面的缺陷。",
+    ),
+    TargetClassConfig(
+        id=5,
+        name="Scratches",
+        chinese_name="划伤",
+        description="钢表面出现线状划痕的缺陷。",
+    ),
+]
 
 
 # =============================================================================
@@ -62,14 +154,14 @@ class DatabaseConfig(BaseModel):
     port: int = int(os.getenv("DB_PORT", "5432"))
 
     # 数据库用户名，从环境变量 DB_USERNAME 读取，默认为 rsod_user
-    username: str = os.getenv("DB_USERNAME", "rsod_user")
+    username: str = _env_first("DB_USERNAME", "DB_USER", default="rsod_user") or "rsod_user"
 
     # 数据库密码，从环境变量 DB_PASSWORD 读取，默认为 rsod_password
     # 注意：生产环境应使用强密码并通过环境变量传入
     password: str = os.getenv("DB_PASSWORD", "rsod_password")
 
     # 数据库名称，从环境变量 DB_DATABASE 读取，默认为 rsod_platform
-    database: str = os.getenv("DB_DATABASE", "rsod_db")
+    database: str = _env_first("DB_DATABASE", "DB_NAME", default="rsod_db") or "rsod_db"
 
 
 # =============================================================================
@@ -94,10 +186,10 @@ class MinIOConfig(BaseModel):
     """
 
     # MinIO 服务器主机地址
-    host: str = os.getenv("MINIO_HOST", "localhost")
+    host: str = MINIO_HOST
 
     # MinIO API 端口（不是 Console 端口）
-    port: int = int(os.getenv("MINIO_PORT", "9000"))
+    port: int = MINIO_PORT
 
     # 访问密钥（Access Key），用于身份验证
     access_key: str = os.getenv("MINIO_ACCESS_KEY", "admin")
@@ -198,18 +290,51 @@ class Settings(BaseModel):
     # 服务监听端口
     port: int = int(os.getenv("PORT", "8000"))
 
+    # 外部访问基址，用于构造 API 返回的可访问 URL
+    public_base_url: str = os.getenv(
+        "PUBLIC_BASE_URL",
+        f"http://localhost:{os.getenv('PORT', '8000')}",
+    )
+
     # -------------------------------------------------------------------------
     # 静态文件和目录配置
     # -------------------------------------------------------------------------
 
+    # backend 根目录
+    backend_root: str = str(BACKEND_DIR)
+
+    # 数据目录
+    data_root: str = _resolve_backend_path(os.getenv("DATA_ROOT"), Paths.data())
+
+    # 训练集目录
+    train_root: str = _resolve_backend_path(os.getenv("TRAIN_ROOT"), Paths.train_root())
+
+    # 训练图片目录
+    train_images_dir: str = _resolve_backend_path(
+        os.getenv("TRAIN_IMAGES_DIR"),
+        Paths.train_images(),
+    )
+
+    # 训练标签目录
+    train_labels_dir: str = _resolve_backend_path(
+        os.getenv("TRAIN_LABELS_DIR"),
+        Paths.train_labels(),
+    )
+
     # 静态文件目录，用于 serving 上传的图片等静态资源
-    static_dir: str = "static"
+    static_dir: str = _resolve_backend_path(os.getenv("STATIC_DIR"), Paths.static())
 
     # 上传文件存储目录，保存用户上传的原始图片
-    upload_dir: str = "static/uploads"
+    upload_dir: str = _resolve_backend_path(os.getenv("UPLOAD_DIR"), Paths.uploads())
 
     # 检测结果文件目录，保存检测后的图片
-    result_dir: str = "static/results"
+    result_dir: str = _resolve_backend_path(os.getenv("RESULT_DIR"), Paths.results())
+
+    # 模型目录
+    models_dir: str = _resolve_backend_path(os.getenv("MODELS_DIR"), Paths.models())
+
+    # 日志目录
+    logs_dir: str = _resolve_backend_path(os.getenv("LOGS_DIR"), Paths.logs())
 
     # -------------------------------------------------------------------------
     # 服务配置实例
@@ -242,7 +367,10 @@ class Settings(BaseModel):
 
     # YOLO 模型文件路径，相对于项目根目录
     # 支持的模型：yolo11n.pt, yolo11s.pt, yolo11m.pt 等
-    yolo_model_path: str = os.getenv("YOLO_MODEL_PATH", "models/yolo11n.pt")
+    yolo_model_path: str = _resolve_backend_path(
+        os.getenv("YOLO_MODEL_PATH"),
+        Paths.models() / "yolo11n.pt",
+    )
 
     # 目标检测置信度阈值
     # 只有检测框置信度 >= 此值的结果才会被保留
@@ -253,6 +381,38 @@ class Settings(BaseModel):
     # 用于去除重叠的检测框，只保留最优的检测结果
     # 范围：0.0 - 1.0，默认 0.45
     iou_threshold: float = float(os.getenv("IOU_THRESHOLD", "0.45"))
+
+    # 允许上传的图片扩展名
+    allowed_upload_extensions: List[str] = [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".bmp",
+        ".tif",
+        ".tiff",
+    ]
+
+    # 允许上传的图片 MIME 类型
+    allowed_upload_mime_types: List[str] = [
+        "image/jpeg",
+        "image/png",
+        "image/bmp",
+        "image/tiff",
+        "image/x-tiff",
+    ]
+
+    # 当前项目统一使用的缺陷类别定义
+    target_catalog: List[TargetClassConfig] = DEFAULT_TARGET_CATALOG
+
+    @property
+    def target_names(self) -> List[str]:
+        return [target.name for target in self.target_catalog]
+
+    def get_target_by_id(self, class_id: int) -> Optional[TargetClassConfig]:
+        for target in self.target_catalog:
+            if target.id == class_id:
+                return target
+        return None
 
 
 # =============================================================================
