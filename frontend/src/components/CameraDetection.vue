@@ -184,6 +184,7 @@ function detectionLoop() {
 
   const imageData = tempCanvas.toDataURL("image/jpeg", 0.7)
   sendFrame(imageData)
+  drawBoxes()
 }
 
 function drawBoxes() {
