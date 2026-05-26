@@ -100,11 +100,11 @@ class MinIOConfig(BaseModel):
     port: int = int(os.getenv("MINIO_PORT", "9000"))
 
     # 访问密钥（Access Key），用于身份验证
-    access_key: str = os.getenv("MINIO_ACCESS_KEY", "admin")
+    access_key: str = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 
     # 秘密密钥（Secret Key），用于身份验证
     # 注意：生产环境应使用强密码并通过环境变量传入
-    secret_key: str = os.getenv("MINIO_SECRET_KEY", "minio_password")
+    secret_key: str = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 
     # 是否使用安全连接（HTTPS）
     # 从环境变量读取并转换为布尔值

@@ -89,7 +89,9 @@ storage/redis/data/
 # 前端
 # ==================================
 node_modules/
-frontend/dist/
 frontend/.env
 frontend/.env.local
 frontend/uploads/
+
+# 智能体工作文档
+.trae/documents/
