@@ -15,6 +15,7 @@ import HistoryPage from "./views/HistoryPage.vue";
 import AIChatPage from "./views/AIChatPage.vue";
 import TargetsPage from "./views/TargetsPage.vue";
 import ProfilePage from "./views/ProfilePage.vue";
+import CameraDetection from "./components/CameraDetection.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -40,6 +41,7 @@ const router = createRouter({
     { path: "/dashboard/ai-chat", name: "ai-chat", component: AIChatPage },
     { path: "/dashboard/targets", name: "targets", component: TargetsPage },
     { path: "/dashboard/profile", name: "profile", component: ProfilePage },
+    { path: "/dashboard/camera", name: "camera", component: CameraDetection },
   ],
 });
 
