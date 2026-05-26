@@ -206,6 +206,7 @@ interface Message {
 
 const inputMessage = ref("");
 const isTyping = ref(false);
+const conversationId = ref<number | null>(null);
 const messagesContainer = ref<HTMLElement | null>(null);
 
 const messages = ref<Message[]>([
@@ -233,7 +234,6 @@ const scrollToBottom = async () => {
 const sendMessage = async (content: string) => {
   if (!content.trim()) return;
 
-  // Add user message
   messages.value.push({
     role: "user",
     content: content.trim(),
@@ -242,35 +242,46 @@ const sendMessage = async (content: string) => {
   inputMessage.value = "";
   await scrollToBottom();
 
-  // Simulate AI response
   isTyping.value = true;
-  await new Promise((resolve) => setTimeout(resolve, 1500));
 
-  // Generate response based on question
-  let response = "";
-  if (content.includes("裂纹")) {
-    response =
-      "裂纹是钢材表面最常见的缺陷之一，通常表现为线性或分支状的断裂痕迹。产生原因包括：\n\n1. 铸造过程中冷却不均匀\n2. 轧制过程中应力过大\n3. 热处理不当\n\n我们的YOLOv11模型对裂纹的检测精度可达98%以上，支持识别微裂纹（宽度小于0.1mm）和宏观裂纹。";
-  } else if (content.includes("精度")) {
-    response =
-      "提高检测精度的建议：\n\n1. 确保图片清晰度足够高（建议分辨率1920x1080以上）\n2. 保证光照均匀，避免反光\n3. 图片中钢材表面应占据主要区域\n4. 可以尝试使用批量检测功能，系统会自动进行图像增强\n5. 选择合适的模型版本（yolo11n适合快速检测，yolo11m适合高精度检测）";
-  } else if (content.includes("格式")) {
-    response =
-      "目前系统支持以下图片格式：\n\n• JPG / JPEG - 最常用格式\n• PNG - 支持透明背景\n• BMP - 位图格式\n• TIFF - 高质量图像\n\n建议使用JPG格式，文件大小控制在5MB以内，以获得最佳的检测速度和效果。";
-  } else if (content.includes("分类") || content.includes("标准")) {
-    response =
-      "我们的缺陷分类标准基于国家标准GB/T和行业标准，主要包含以下类别：\n\n• 表面缺陷类：裂纹、斑点、划痕\n• 表面状态类：麻面、轧入氧化皮\n• 内部缺陷类：夹杂物\n\n每种缺陷都有对应的严重程度分级（轻微、中等、严重），便于质量评估。";
-  } else {
-    response =
-      "感谢您的提问！作为钢材表面缺陷检测AI助手，我可以帮您解答以下问题：\n\n1. 各类缺陷的定义和特征\n2. 检测方法和精度优化\n3. 检测结果的解读和分析\n4. 系统使用指南和技巧\n\n请告诉我您具体想了解什么内容？";
+  try {
+    const payload = {
+      messages: messages.value.slice(0, -1).map((m) => ({
+        role: m.role,
+        content: m.content,
+      })),
+      conversation_id: conversationId.value,
+      user_id: localStorage.getItem("user_id") || "default_user",
+    };
+
+    const res = await fetch("/qa/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const json = await res.json();
+
+    if (json.success && json.data) {
+      conversationId.value = json.data.conversation_id;
+      messages.value.push({
+        role: "assistant",
+        content: json.data.response,
+      });
+    } else {
+      messages.value.push({
+        role: "assistant",
+        content: "抱歉，AI 服务暂时不可用：" + (json.message || "未知错误"),
+      });
+    }
+  } catch {
+    messages.value.push({
+      role: "assistant",
+      content: "网络错误，请检查后端服务是否运行。",
+    });
   }
 
   isTyping.value = false;
-  messages.value.push({
-    role: "assistant",
-    content: response,
-  });
-
   await scrollToBottom();
 };
 
