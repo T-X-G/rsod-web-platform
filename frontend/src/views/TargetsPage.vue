@@ -113,8 +113,7 @@
                   {{ defect.description || '暂无描述' }}
                 </p>
               </div>
-            </div>
-          </button>
+            </button>
         </div>
       </div>
 

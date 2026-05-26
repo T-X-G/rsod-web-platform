@@ -8,7 +8,7 @@ echo ========================================
 echo.
 
 echo [1/3] Starting containers (PostgreSQL + Redis + MinIO)...
-docker compose up -d
+docker compose up -d postgres redis minio
 docker compose ps
 
 echo.
