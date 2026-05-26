@@ -43,6 +43,18 @@ const router = createRouter({
   ],
 });
 
+router.beforeEach((to, _from, next) => {
+  const token = localStorage.getItem('token')
+  const publicPaths = ['/', '/login', '/register', '/forgot-password']
+  if (to.path.startsWith('/dashboard') && !token) {
+    next('/login')
+  } else if (publicPaths.includes(to.path) && token) {
+    next('/dashboard/detection')
+  } else {
+    next()
+  }
+})
+
 const app = createApp(App);
 const pinia = createPinia();
 app.use(router);
