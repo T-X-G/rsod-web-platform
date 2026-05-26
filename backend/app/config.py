@@ -254,6 +254,22 @@ class Settings(BaseModel):
     # 范围：0.0 - 1.0，默认 0.45
     iou_threshold: float = float(os.getenv("IOU_THRESHOLD", "0.45"))
 
+    # -------------------------------------------------------------------------
+    # DeepSeek AI 问答配置
+    # -------------------------------------------------------------------------
+
+    # DeepSeek API 密钥
+    deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
+
+    # DeepSeek API 基础 URL
+    deepseek_api_base_url: str = os.getenv("DEEPSEEK_API_BASE_URL", "https://api.deepseek.com")
+
+    # DeepSeek 模型名称
+    deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+
+    # API 请求超时时间（秒）
+    deepseek_timeout: int = int(os.getenv("DEEPSEEK_TIMEOUT", "60"))
+
 
 # =============================================================================
 # 全局配置实例

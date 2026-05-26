@@ -1,140 +1,140 @@
-# =============================================================================
-# FastAPI 应用入口
-# =============================================================================
-# 功能：创建 FastAPI 应用，配置中间件，注册路由
-# 依赖：fastapi, uvicorn
-# =============================================================================
+from dotenv import load_dotenv
+load_dotenv()  # 加载 .env 文件
 
-from fastapi import FastAPI                                      # FastAPI 框架
-from fastapi.middleware.cors import CORSMiddleware              # CORS 中间件
-from fastapi.staticfiles import StaticFiles                      # 静态文件服务
-from app.config import settings                                  # 配置
-from app.api.detection import router as detection_router         # 检测 API 路由
-from app.api.model import router as model_router                 # 模型管理 API 路由
-from app.utils.file_utils import ensure_directories              # 确保目录存在
+from fastapi import FastAPI, File, UploadFile, Form
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from ultralytics import YOLO
+from PIL import Image
+import uvicorn
+import uuid
+import io
+from pathlib import Path
 
-# 启动时确保必要的目录存在（上传目录、结果目录等）
-ensure_directories()
+from app.api import router as qa_router
+from app.models import Base
+from app.utils.database import engine
 
-# =============================================================================
-# 创建 FastAPI 应用实例
-# =============================================================================
 app = FastAPI(
-    title=settings.app_name,                                    # API 文档标题
-    version=settings.app_version,                                # API 版本
-    description="遥感目标检测平台后端 API"                        # API 描述
+    title="遥感目标智能检测平台",
+    description="基于YOLO的遥感图像目标检测系统API",
+    version="1.0.0"
 )
 
-# =============================================================================
-# 配置 CORS 中间件
-# =============================================================================
+# ==================== 加载 YOLO 模型 ====================
+# 确保模型文件存在，如果不存在会自动下载（仅限官方模型）
+MODEL_PATH = "models/yolo11n.pt"          # 可替换为你的 best.pt
+try:
+    model = YOLO(MODEL_PATH)
+    print(f"✅ 模型加载成功: {MODEL_PATH}")
+except Exception as e:
+    print(f"⚠️ 模型加载失败: {e}，将使用占位模式（仅测试用）")
+    model = None
+
+# ==================== CORS 配置 ====================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,                        # 允许的跨域来源
-    allow_credentials=True,                                     # 允许携带凭证
-    allow_methods=["*"],                                        # 允许所有 HTTP 方法
-    allow_headers=["*"],                                        # 允许所有请求头
+    allow_origins=["*"],          # 生产环境应指定具体域名
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# =============================================================================
-# 挂载静态文件目录
-# =============================================================================
-# 访问 URL: http://host:port/static/文件名
-# 实际路径: settings.static_dir/文件名
-app.mount("/static", StaticFiles(directory=settings.static_dir), name="static")
+# ==================== 数据库初始化 ====================
+Base.metadata.create_all(bind=engine)
 
-# =============================================================================
-# 注册 API 路由
-# =============================================================================
-# 所有检测相关的 API 都会以 /api/detection 为前缀
-app.include_router(detection_router, prefix="/api")
-# 所有模型管理相关的 API 都会以 /api/model 为前缀
-app.include_router(model_router, prefix="/api")
+# ==================== 注册路由 ====================
+app.include_router(qa_router)
 
+# ==================== 静态文件目录 ====================
+STATIC_DIR = Path("static")
+STATIC_DIR.mkdir(exist_ok=True)          # 如果目录不存在则创建
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-# =============================================================================
-# 根路径
-# =============================================================================
-@app.get("/")
-async def root():
-    """根路径返回应用信息"""
-    return {
-        "name": settings.app_name,
-        "version": settings.app_version,
-        "status": "running"
-    }
-
-
-# =============================================================================
-# 健康检查接口
-# =============================================================================
+# ==================== 健康检查 ====================
 @app.get("/health")
 async def health_check():
-    """
-    健康检查接口
-
-    功能：检查所有依赖服务的状态
-    - PostgreSQL：数据库连接
-    - MinIO：对象存储连接
-    - Redis：缓存连接
-
-    返回：
-        dict: 包含各服务状态的字典
-    """
-    postgres_ok = False
-    minio_ok = False
-    redis_ok = False
-
-    # 检查 PostgreSQL
-    try:
-        from app.models.database import engine
-        from sqlalchemy import text
-        with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        postgres_ok = True
-    except Exception:
-        pass
-
-    # 检查 Redis
-    try:
-        from app.services.redis_service import redis_service
-        redis_ok = redis_service.ping()
-    except Exception:
-        pass
-
-    # 检查 MinIO
-    try:
-        from app.services.minio_service import minio_service
-        minio_service.client.list_buckets()
-        minio_ok = True
-    except Exception:
-        pass
-
-    # 计算整体状态
-    all_ok = all([postgres_ok, minio_ok, redis_ok])
-    status = "healthy" if all_ok else "degraded"
-
     return {
-        "status": status,
-        "services": {
-            "postgres": "up" if postgres_ok else "down",
-            "minio": "up" if minio_ok else "down",
-            "redis": "up" if redis_ok else "down"
-        }
+        "status": "healthy",
+        "service": "rsod-web-platform",
+        "version": "1.0.0"
     }
 
+# ==================== 根路径 ====================
+@app.get("/")
+async def root():
+    return {"message": "欢迎使用遥感目标智能检测平台"}
 
-# =============================================================================
-# 应用启动入口
-# =============================================================================
+# ==================== 单图检测接口 ====================
+@app.post("/detection/single")
+async def detect_single_image(
+    file: UploadFile = File(...),
+    model_name: str = Form("rsod-yolo11n")
+):
+    # 情况1：模型未加载
+    if model is None:
+        return {
+            "success": False,
+            "message": "模型服务未就绪，请检查后端模型文件"
+        }
+
+    try:
+        # 1. 读取并转换上传的图片
+        image_data = await file.read()
+        image = Image.open(io.BytesIO(image_data)).convert("RGB")
+
+        # 2. 执行推理
+        results = model.predict(source=image, conf=0.5)
+        result = results[0]
+
+        # 3. 解析检测结果
+        boxes = []
+        if result.boxes is not None:
+            for box in result.boxes:
+                boxes.append({
+                    "class_name": model.names[int(box.cls)],
+                    "confidence": float(box.conf),
+                })
+
+        # 4. 生成标注图片并保存到 static 目录
+        # 注意：result.plot() 返回 numpy 数组 (BGR 格式)
+        import cv2
+        annotated_img_bgr = result.plot()
+        annotated_img_rgb = cv2.cvtColor(annotated_img_bgr, cv2.COLOR_BGR2RGB)
+        pil_img = Image.fromarray(annotated_img_rgb)
+
+        # 生成唯一文件名
+        filename = f"result_{uuid.uuid4().hex}.jpg"
+        filepath = STATIC_DIR / filename
+        pil_img.save(filepath, quality=95)
+
+        # 构造访问 URL（前端将通过代理或直接请求该地址）
+        result_image_url = f"/static/{filename}"
+
+        # 5. 返回结果
+        return {
+            "success": True,
+            "data": {
+                "total_objects": len(boxes),
+                "detection_time": round(result.speed.get('inference', 0) / 1000, 2),
+                "model_name": model_name,
+                "boxes": boxes,
+                "result_image_url": result_image_url
+            }
+        }
+
+    except Exception as e:
+        print(f"❌ 检测失败: {e}")
+        return {
+            "success": False,
+            "message": f"检测失败: {str(e)}"
+        }
+
+# ==================== 启动入口 ====================
 if __name__ == "__main__":
-    import uvicorn                                               # ASGI 服务器
-
     uvicorn.run(
-        "main:app",                                             # 应用模块路径
-        host=settings.host,                                      # 监听地址
-        port=settings.port,                                      # 监听端口
-        reload=settings.debug,                                   # 开发模式启用热重载
-        log_level="debug" if settings.debug else "info",         # 日志级别
-        access_log=True                                          # 启用访问日志
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True      # 开发模式自动重载，生产环境建议去掉
     )

@@ -19,8 +19,12 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
-        changeOrigin: true
-      }
-    }
-  }
+        changeOrigin: true,
+      },
+      '/static': {               // 新增：代理后端静态图片目录
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
+  },
 })
