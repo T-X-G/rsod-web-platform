@@ -246,7 +246,7 @@ const sendMessage = async (content: string) => {
 
   try {
     const payload = {
-      messages: messages.value.slice(0, -1).map((m) => ({
+      messages: messages.value.map((m) => ({
         role: m.role,
         content: m.content,
       })),
