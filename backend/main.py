@@ -19,6 +19,8 @@ setup_app_logging(
 )
 logger = logging.getLogger(__name__)
 Paths.init_runtime_dirs()
+from app.models.database import init_db
+init_db()
 
 from app.api.detection import router as detection_router  # noqa: E402
 from app.api.model import router as model_router  # noqa: E402

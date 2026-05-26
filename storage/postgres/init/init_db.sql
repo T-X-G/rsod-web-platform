@@ -102,6 +102,28 @@ CREATE TABLE IF NOT EXISTS model_versions (
 
 CREATE INDEX idx_model_versions_status ON model_versions(status);
 
+-- AI问答对话表 (用于多轮对话)
+CREATE TABLE IF NOT EXISTS conversations (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    title VARCHAR(255) DEFAULT '新对话',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_conversations_user_id ON conversations(user_id);
+
+-- AI问答消息表
+CREATE TABLE IF NOT EXISTS messages (
+    id SERIAL PRIMARY KEY,
+    conversation_id INTEGER REFERENCES conversations(id) ON DELETE CASCADE,
+    role VARCHAR(50) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
+
 -- 插入目标类别数据
 INSERT INTO target_categories (name, chinese_name, description, color, sort_order) VALUES
 ('crazing', '裂纹', '表面裂纹缺陷', '#ef4444', 1),
