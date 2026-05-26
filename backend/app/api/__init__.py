@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.services import QAService
-from app.utils.database import get_db
-from app.utils.redis import get_redis
+from app.models.database import get_db
+from app.services.redis_service import redis_service
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -157,8 +157,7 @@ async def delete_conversation(conversation_id: int, db: Session = Depends(get_db
         service = QAService()
         service.delete_conversation(db, conversation_id)
         
-        redis_client = get_redis()
-        redis_client.delete(f"conversation:{conversation_id}")
+        redis_service.client.delete(f"conversation:{conversation_id}")
         
         return ChatResponse(
             success=True,

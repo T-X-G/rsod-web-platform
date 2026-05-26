@@ -1,7 +1,7 @@
 from openai import OpenAI
 from app.config import settings
 from app.models import Conversation, Message
-from app.utils.redis import get_redis
+from app.services.redis_service import redis_service
 from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import List, Optional
@@ -71,12 +71,10 @@ class QAService:
         return True
     
     def cache_conversation(self, conversation_id, messages):
-        redis_client = get_redis()
         key = f"conversation:{conversation_id}"
-        redis_client.set(key, json.dumps(messages), ex=3600)
+        redis_service.client.set(key, json.dumps(messages), ex=3600)
     
     def get_cached_conversation(self, conversation_id):
-        redis_client = get_redis()
         key = f"conversation:{conversation_id}"
-        data = redis_client.get(key)
+        data = redis_service.client.get(key)
         return json.loads(data) if data else None
