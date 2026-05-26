@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+.env
+.venv
+venv
+node_modules
+.git
+storage
+static/uploads/*
+static/results/*
+runs
+*.pt
+!models/neu_det_v2_best.pt
