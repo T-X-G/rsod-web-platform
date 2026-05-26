@@ -37,6 +37,10 @@ class CameraDetectionService:
         return self._status == "RUNNING"
 
     def detect_image(self, image: np.ndarray) -> Dict[str, Any]:
+        CLASS_THRESHOLDS = {
+            "crazing": 0.12, "rolled-in_scale": 0.18, "inclusion": 0.20,
+            "scratches": 0.25, "patches": 0.30, "pitted_surface": 0.30,
+        }
         with self._request_semaphore:
             start = time.time()
             results = detection_service.model.predict(
@@ -55,6 +59,9 @@ class CameraDetectionService:
                     confidence = float(box.conf[0])
                     class_id = int(box.cls[0])
                     class_name = detection_service.get_class_name(class_id)
+                    min_conf = CLASS_THRESHOLDS.get(class_name, 0.30)
+                    if confidence < min_conf:
+                        continue
                     chinese_name = detection_service.get_class_chinese_name(class_id, class_name)
                     boxes.append({
                         "x1": x1, "y1": y1, "x2": x2, "y2": y2,
