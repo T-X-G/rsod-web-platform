@@ -168,8 +168,8 @@ const scrollToBottom = async () => {
 const fetchConversations = async () => {
   try {
     const res = await getConversations(50)
-    if (res.success) conversations.value = res.data.conversations || []
-  } catch { /* silent */ }
+    if (res.success) conversations.value = res.data?.conversations || []
+  } catch { console.error('operation failed') }
 }
 
 const newChat = () => {
@@ -181,13 +181,13 @@ const selectConversation = async (id: number) => {
   conversationId.value = id
   try {
     const res = await getConversation(id)
-    if (res.success && res.data.messages) {
-      messages.value = res.data.messages.map((m: { role: string; content: string }) => ({
+    if (res.success && res.data?.messages) {
+      messages.value = res.data!.messages.map((m: { role: string; content: string }) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
       }))
     }
-  } catch { /* silent */ }
+  } catch { console.error('operation failed') }
 }
 
 const startEdit = (id: number, title: string) => {
@@ -201,7 +201,7 @@ const saveTitle = async (id: number) => {
       await updateConversation(id, editTitle.value.trim())
       const conv = conversations.value.find(c => c.id === id)
       if (conv) conv.title = editTitle.value.trim()
-    } catch { /* silent */ }
+    } catch { console.error('operation failed') }
   }
   editingId.value = null
 }
@@ -214,7 +214,7 @@ const removeConversation = async (id: number) => {
       conversationId.value = null
       messages.value = []
     }
-  } catch { /* silent */ }
+  } catch { console.error('operation failed') }
 }
 
 const sendMessage = async (content: string) => {
@@ -227,8 +227,8 @@ const sendMessage = async (content: string) => {
     const payload = messages.value.map(m => ({ role: m.role, content: m.content }))
     const res = await chat(payload, conversationId.value as any)
     if (res.success && res.data) {
-      conversationId.value = res.data.conversation_id
-      messages.value.push({ role: "assistant", content: res.data.response })
+      conversationId.value = res.data!.conversation_id!
+      messages.value.push({ role: "assistant", content: res.data!.response! })
       fetchConversations()
     } else {
       messages.value.push({ role: "assistant", content: "抱歉，AI 服务暂时不可用：" + (res.message || "未知错误") })

@@ -227,9 +227,9 @@ onMounted(async () => {
   try {
     const res = await getTargets(1, 50)
     if (res.success) {
-      targets.value = res.data.targets || []
+      targets.value = res.data?.targets || []
     }
-  } catch { /* silent */ }
+  } catch { console.error('operation failed') }
 })
 
 // Get all defects

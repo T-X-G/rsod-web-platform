@@ -12,14 +12,14 @@ const DEFECT_CONFIG: Record<string, { severity: DetectionBox["severity"]; color:
 };
 
 function mapApiBox(box: {
-  x1: number; y1: number; x2: number; y2: number;
+  bbox: [number, number, number, number];
   confidence: number; class_name: string; chinese_name: string;
 }): DetectionBox {
-  const config = DEFECT_CONFIG[box.class_name] ?? { severity: "medium", color: "#6b7280" };
+  const config = DEFECT_CONFIG[box.class_name] ?? { severity: "medium", color: "#6b7280" } as any;
   return {
     label: box.chinese_name || box.class_name,
     confidence: Number(box.confidence.toFixed(2)),
-    bbox: [box.x1, box.y1, box.x2, box.y2],
+    bbox: box.bbox,
     severity: config.severity,
     color: config.color,
   };
@@ -43,9 +43,11 @@ async function callDetectionApi(file: File): Promise<{
   formData.append("file", file);
   formData.append("model_name", "steel-defect-yolo11n");
 
+  const token = localStorage.getItem("token");
   const response = await fetch("/api/detection/single", {
     method: "POST",
     body: formData,
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
   if (!response.ok) {

@@ -260,7 +260,7 @@ onMounted(async () => {
   try {
     const res = await getMe()
     if (res.success) {
-      user.value = res.data
+      user.value = res.data ?? {}
     }
   } catch { /* silent */ }
 })

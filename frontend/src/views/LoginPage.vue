@@ -36,7 +36,7 @@ const handleSubmit = async () => {
     if (isRegister.value) {
       const res = await register(form.value.username, form.value.password, form.value.email || undefined)
       if (res.success) {
-        localStorage.setItem('token', res.data.access_token)
+        localStorage.setItem('token', res.data!.access_token)
         router.push('/dashboard/detection')
       } else {
         alert(res.message || '注册失败')
@@ -44,7 +44,7 @@ const handleSubmit = async () => {
     } else {
       const res = await login(form.value.username, form.value.password)
       if (res.success) {
-        localStorage.setItem('token', res.data.access_token)
+        localStorage.setItem('token', res.data!.access_token)
         router.push('/dashboard/detection')
       } else {
         alert(res.message || '登录失败')

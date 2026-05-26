@@ -2,10 +2,10 @@
 import request from './request'
 
 export const login = (username, password) => {
-  const formData = new FormData()
-  formData.append('username', username)
-  formData.append('password', password)
-  return request.post('/api/auth/login', formData, {
+  const params = new URLSearchParams()
+  params.append('username', username)
+  params.append('password', password)
+  return request.post('/api/auth/login', params, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   })
 }

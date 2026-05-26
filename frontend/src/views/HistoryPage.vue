@@ -230,10 +230,10 @@ onMounted(async () => {
   try {
     const res = await getHistory(1, 50)
     if (res.success) {
-      historyData.value = res.data.records || []
-      stats.value.total = res.data.total || historyData.value.length
+      historyData.value = res.data?.records || []
+      stats.value.total = res.data?.total || historyData.value.length
     }
-  } catch { /* silent */ }
+  } catch { console.error('operation failed') }
 })
 
 const filteredHistory = computed(() => {
@@ -264,7 +264,7 @@ const handleDelete = async (id: string) => {
   try {
     await deleteRecordApi(id)
     historyData.value = historyData.value.filter(item => item.id !== id)
-  } catch { /* silent */ }
+  } catch { console.error('operation failed') }
 }
 </script>
 

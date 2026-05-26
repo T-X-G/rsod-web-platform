@@ -87,6 +87,7 @@ const lastDetectionTime = ref(0)
 const boxes = ref<DetectionBox[]>([])
 const errorMsg = ref("")
 const animationId = ref(0)
+let frameSkip = 0
 
 const CLASS_COLORS: Record<string, string> = {
   crazing: "border-red-500 bg-red-500/10 text-red-400",
@@ -183,7 +184,8 @@ function detectionLoop() {
   tempCtx.drawImage(video, 0, 0)
 
   const imageData = tempCanvas.toDataURL("image/jpeg", 0.7)
-  sendFrame(imageData)
+  frameSkip++
+  if (frameSkip % 3 === 0) sendFrame(imageData)
   drawBoxes()
 }
 

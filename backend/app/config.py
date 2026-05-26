@@ -393,7 +393,7 @@ class Settings(BaseModel):
     # -------------------------------------------------------------------------
     # JWT 认证配置
     # -------------------------------------------------------------------------
-    jwt_secret_key: str = os.getenv("JWT_SECRET_KEY", "steel-defect-default-key-change-me")
+    jwt_secret_key: str = os.getenv("JWT_SECRET_KEY", "")
 
     # -------------------------------------------------------------------------
     # 检测标注配置

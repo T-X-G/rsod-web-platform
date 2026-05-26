@@ -80,9 +80,27 @@ async def chat_stream(request: ChatRequest, db: Session = Depends(get_db), curre
                 for token in service.generate_stream(messages):
                     full += token
                     yield f"data: {json.dumps({'token': token, 'full': full}, ensure_ascii=False)}\n\n"
+                # Save to database after completion
+                messages.append({"role": "assistant", "content": full})
+                if request.conversation_id:
+                    db_message = DBMessage(conversation_id=request.conversation_id, role="assistant", content=full)
+                    db.add(db_message)
+                    db.commit()
+                    service.cache_conversation(request.conversation_id, messages)
+                else:
+                    conv = DBConversation(user_id=current_user.id, title=messages[0]["content"][:50] if messages else "新对话")
+                    db.add(conv)
+                    db.commit()
+                    db.refresh(conv)
+                    for msg in messages:
+                        db.add(DBMessage(conversation_id=conv.id, role=msg["role"], content=msg["content"]))
+                    db.commit()
+                    service.cache_conversation(conv.id, messages)
+                    yield f"data: {json.dumps({'done': True, 'full': full, 'conversation_id': conv.id}, ensure_ascii=False)}\n\n"
+                    return
                 yield f"data: {json.dumps({'done': True, 'full': full}, ensure_ascii=False)}\n\n"
-            except Exception:
-                yield f"data: {json.dumps({'error': True, 'full': full})}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'error': True, 'full': full, 'message': str(e)})}\n\n"
 
         return StreamingResponse(event_stream(), media_type="text/event-stream")
     except Exception as e:
