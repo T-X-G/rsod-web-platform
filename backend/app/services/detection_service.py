@@ -61,7 +61,7 @@ class DetectionService:
         self.model = YOLO(settings.yolo_model_path)
         logger.info("模型加载成功: %s", settings.yolo_model_path)
 
-    def reload_model(self) -> bool:
+    def reload_model(self, model_object_name: Optional[str] = None) -> bool:
         try:
             self.model = None
             self._load_model_smart()

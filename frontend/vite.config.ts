@@ -19,10 +19,6 @@ export default defineConfig({
       '/static': {
         target: 'http://localhost:8000',
         changeOrigin: true
-      },
-      '/qa': {
-        target: 'http://localhost:8000',
-        changeOrigin: true
       }
     }
   }

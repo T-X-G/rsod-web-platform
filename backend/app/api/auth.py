@@ -13,11 +13,11 @@ from app.config import settings
 
 router = APIRouter(prefix="/auth", tags=["认证"])
 
-SECRET_KEY = "steel-defect-detection-secret-key-change-in-production"
+SECRET_KEY = settings.jwt_secret_key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
 def verify_password(plain_password: str, hashed_password: str):
     salt, stored = hashed_password.split("$", 1)

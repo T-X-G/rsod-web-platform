@@ -390,6 +390,16 @@ class Settings(BaseModel):
     deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     deepseek_timeout: int = int(os.getenv("DEEPSEEK_TIMEOUT", "60"))
 
+    # -------------------------------------------------------------------------
+    # JWT 认证配置
+    # -------------------------------------------------------------------------
+    jwt_secret_key: str = os.getenv("JWT_SECRET_KEY", "steel-defect-default-key-change-me")
+
+    # -------------------------------------------------------------------------
+    # 检测标注配置
+    # -------------------------------------------------------------------------
+    font_path: str = os.getenv("FONT_PATH", "C:/Windows/Fonts/simhei.ttf")
+
     # 允许上传的图片扩展名
     allowed_upload_extensions: List[str] = [
         ".jpg",

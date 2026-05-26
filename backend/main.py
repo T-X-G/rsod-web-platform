@@ -47,10 +47,10 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory=settings.static_dir), name="static")
 app.include_router(detection_router, prefix="/api")
 app.include_router(model_router, prefix="/api")
-app.include_router(qa_router)
-app.include_router(auth_router)
-app.include_router(targets_router)
-app.include_router(camera_router)
+app.include_router(qa_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
+app.include_router(targets_router, prefix="/api")
+app.include_router(camera_router, prefix="/api")
 
 
 @app.get("/")

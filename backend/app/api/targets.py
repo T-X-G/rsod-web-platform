@@ -6,14 +6,14 @@ from typing import Optional, List
 from app.models.database import get_db
 from app.models import Target, User
 from app.api.auth import get_current_user
+from app.utils.paths import Paths
 
 import uuid
 import os
-from pathlib import Path
 
 router = APIRouter(prefix="/targets", tags=["目标库"])
 
-STATIC_DIR = Path("static")
+STATIC_DIR = Paths.static()
 
 class TargetResponse(BaseModel):
     success: bool

@@ -26,6 +26,19 @@ class QAService:
             timeout=settings.deepseek_timeout
         )
         return response.choices[0].message.content
+
+    def generate_stream(self, messages):
+        stream = self.client.chat.completions.create(
+            model=settings.deepseek_model,
+            messages=messages,
+            temperature=0.7,
+            max_tokens=2048,
+            timeout=settings.deepseek_timeout,
+            stream=True,
+        )
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
     
     def save_conversation(self, db, user_id, messages):
         conversation = Conversation(

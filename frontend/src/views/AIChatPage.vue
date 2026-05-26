@@ -4,8 +4,8 @@
       <!-- Header -->
       <div>
         <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <span>工作台</span>
-          <span class="text-gray-600">›</span>
+          <span>工作�?/span>
+          <span class="text-gray-600">�?/span>
           <span class="text-primary">AI 问答</span>
         </div>
         <h1 class="text-2xl font-bold text-white mb-2">AI 智能问答</h1>
@@ -164,7 +164,7 @@
             <input
               v-model="inputMessage"
               type="text"
-              placeholder="请输入您的问题..."
+              placeholder="请输入您的问�?.."
               class="w-full px-4 py-3 bg-white/5 border border-primary/20 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 focus:bg-primary/5 transition-all"
               @keydown.enter="handleSend"
             />
@@ -174,7 +174,7 @@
             :disabled="!inputMessage.trim() || isTyping"
             class="px-6 py-3 bg-gradient-to-r from-primary to-cyan-400 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-primary/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            发送
+            发�?
             <svg
               class="w-4 h-4"
               fill="none"
@@ -213,12 +213,12 @@ const messages = ref<Message[]>([
   {
     role: "assistant",
     content:
-      "你好！我是钢材表面缺陷检测AI助手。我可以帮你解答关于裂纹、夹杂物、斑点、麻面、轧入氧化皮、划痕等缺陷检测的相关问题，也可以为你提供检测结果的详细分析。",
+      "你好！我是钢材表面缺陷检测AI助手。我可以帮你解答关于裂纹、夹杂物、斑点、麻面、轧入氧化皮、划痕等缺陷检测的相关问题，也可以为你提供检测结果的详细分析�?,
   },
 ]);
 
 const quickQuestions = [
-  "什么是裂纹缺陷？",
+  "什么是裂纹缺陷�?,
   "如何提高检测精度？",
   "检测支持哪些图片格式？",
   "缺陷分类标准是什么？",
@@ -254,7 +254,7 @@ const sendMessage = async (content: string) => {
       user_id: localStorage.getItem("user_id") || "default_user",
     };
 
-    const res = await fetch("/qa/chat", {
+    const res = await fetch("/api/qa/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -277,7 +277,7 @@ const sendMessage = async (content: string) => {
   } catch {
     messages.value.push({
       role: "assistant",
-      content: "网络错误，请检查后端服务是否运行。",
+      content: "网络错误，请检查后端服务是否运行�?,
     });
   }
 
@@ -289,3 +289,4 @@ const handleSend = () => {
   sendMessage(inputMessage.value);
 };
 </script>
+

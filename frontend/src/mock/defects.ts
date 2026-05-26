@@ -212,22 +212,3 @@ export const defectsMockData: DefectDetail[] = [
 export function getDefectById(id: number): DefectDetail | undefined {
   return defectsMockData.find((d) => d.id === id);
 }
-
-export function getCategories(): string[] {
-  return Array.from(new Set(defectsMockData.map((d) => d.category)));
-}
-
-export function getDefectsByCategory(category: string): DefectDetail[] {
-  return defectsMockData.filter((d) => d.category === category);
-}
-
-export function searchDefects(query: string): DefectDetail[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return defectsMockData;
-  return defectsMockData.filter(
-    (d) =>
-      d.name.toLowerCase().includes(q) ||
-      d.englishName.toLowerCase().includes(q) ||
-      d.description.toLowerCase().includes(q),
-  );
-}
