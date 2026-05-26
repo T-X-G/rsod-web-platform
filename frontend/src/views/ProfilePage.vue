@@ -14,8 +14,8 @@
           <!-- User Info -->
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-1">
-              <h1 class="text-3xl font-bold text-white">Lily Chen</h1>
-              <span class="px-3 py-1 bg-primary/20 border border-primary/30 rounded-full text-primary text-sm font-medium">VIP 用户</span>
+              <h1 class="text-3xl font-bold text-white">{{ user.username || '用户' }}</h1>
+              <span class="px-3 py-1 bg-primary/20 border border-primary/30 rounded-full text-primary text-sm font-medium">{{ user.role === 'admin' ? '管理员' : '普通用户' }}</span>
             </div>
             <p class="text-gray-400 mb-3">普通用户 · 注册于 2024-01-15 · 已使用 12 天</p>
             <div class="flex items-center gap-4 text-sm">
@@ -236,11 +236,11 @@
           </svg>
           修改密码
         </button>
-        <button class="px-6 py-3 border border-red-500/20 text-red-400 rounded-xl font-medium hover:bg-red-500/10 transition-all ml-auto flex items-center gap-2">
+        <button @click="handleLogout" class="px-6 py-3 border border-red-500/20 text-red-400 rounded-xl font-medium hover:bg-red-500/10 transition-all ml-auto flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          退出登录
+          <span>退出登录</span>
         </button>
       </div>
     </div>
@@ -248,8 +248,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import DashboardLayout from '../layouts/DashboardLayout.vue'
+import { getMe } from '../api/auth'
+
+const router = useRouter()
+const user = ref<{ username?: string; email?: string; role?: string; id?: string }>({})
+
+onMounted(async () => {
+  try {
+    const res = await getMe()
+    if (res.success) {
+      user.value = res.data
+    }
+  } catch { /* silent */ }
+})
+
+const handleLogout = () => {
+  localStorage.removeItem('token')
+  router.push('/login')
+}
 
 const settings = ref({
   autoDetect: true,
