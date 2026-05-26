@@ -44,15 +44,17 @@ def get_file_path(filename: str, directory: PathLike) -> Path:
     return Path(directory) / filename
 
 
+def _base_url() -> str:
+    return settings.public_base_url.rstrip("/")
+
+
 def get_static_file_url(filename: str, directory: str) -> str:
-    base_url = settings.public_base_url.rstrip("/")
     directory = directory.strip("/").replace("\\", "/")
-    return f"{base_url}/{directory}/{filename}"
+    return f"{_base_url()}/{directory}/{filename}"
 
 
 def get_proxy_file_url(bucket: str, filename: str) -> str:
-    base_url = settings.public_base_url.rstrip("/")
-    return f"{base_url}/api/detection/files/{bucket}/{filename}"
+    return f"{_base_url()}/api/detection/files/{bucket}/{filename}"
 
 
 def extract_object_filename(object_key: Optional[str]) -> str:

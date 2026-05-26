@@ -2,14 +2,19 @@ from openai import OpenAI
 from app.config import settings
 from app.models import Conversation, Message
 from app.utils.redis import get_redis
+from sqlalchemy.orm import Session
 from datetime import datetime
+from typing import List, Optional
 import json
 
 class QAService:
     def __init__(self):
+        base = settings.deepseek_api_base_url.rstrip("/")
+        if not base.endswith("/v1"):
+            base = base.rstrip("/") + "/v1"
         self.client = OpenAI(
             api_key=settings.deepseek_api_key,
-            base_url=f"{settings.deepseek_api_base_url}/v1"
+            base_url=base
         )
     
     def generate_response(self, messages):

@@ -125,11 +125,15 @@ async def get_conversation(conversation_id: int, db: Session = Depends(get_db)):
             message=str(e)
         )
 
+class UpdateTitleRequest(BaseModel):
+    title: str
+
+
 @router.put("/conversation/{conversation_id}", response_model=ChatResponse)
-async def update_conversation(conversation_id: int, title: str, db: Session = Depends(get_db)):
+async def update_conversation(conversation_id: int, body: UpdateTitleRequest, db: Session = Depends(get_db)):
     try:
         service = QAService()
-        conversation = service.update_conversation_title(db, conversation_id, title)
+        conversation = service.update_conversation_title(db, conversation_id, body.title)
         
         if not conversation:
             raise HTTPException(status_code=404, detail="对话不存在")

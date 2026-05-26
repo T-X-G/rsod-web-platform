@@ -298,7 +298,7 @@ class ModelMetadata(BaseModel):
     """
     name: str
     version: str
-    created_at: datetime
+    created_at: Optional[datetime] = None
     description: Optional[str] = None
     metrics: Optional[dict] = None
     config: Optional[dict] = None

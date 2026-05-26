@@ -27,7 +27,7 @@ export const updateConversation = (conversationId, title) => {
   return request({
     url: `/qa/conversation/${conversationId}`,
     method: "put",
-    params: { title },
+    data: { title },
   });
 };
 
