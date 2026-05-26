@@ -41,7 +41,7 @@ async function callDetectionApi(file: File): Promise<{
 }> {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("model_name", "rsod-yolo11n");
+  formData.append("model_name", "steel-defect-yolo11n");
 
   const response = await fetch("/api/detection/single", {
     method: "POST",

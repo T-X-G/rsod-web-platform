@@ -235,21 +235,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import DashboardLayout from "../layouts/DashboardLayout.vue";
 import DefectDetail from "../components/DefectDetail.vue";
-import { defectsMockData, getDefectById } from "../mock/defects";
+import { getTargets } from "../api/targets";
 
 const searchQuery = ref("");
-const selectedDefectId = ref<number | null>(null);
+const selectedDefectId = ref<string | null>(null);
+const targets = ref<Array<{ id: string; name: string; type: string; description: string; image_url: string }>>([]);
+
+onMounted(async () => {
+  try {
+    const res = await getTargets(1, 50)
+    if (res.success) {
+      targets.value = res.data.targets || []
+    }
+  } catch { /* silent */ }
+})
 
 // Get all defects
-const allDefects = computed(() => defectsMockData);
+const allDefects = computed(() => targets.value);
 
 // Get selected defect details
 const selectedDefect = computed(() => {
   if (!selectedDefectId.value) return null;
-  return getDefectById(selectedDefectId.value);
+  return targets.value.find(d => d.id === selectedDefectId.value) || null;
 });
 
 // Filter defects based on search query
