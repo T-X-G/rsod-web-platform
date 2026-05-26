@@ -12,11 +12,7 @@
 
     <div class="space-y-4">
       <div v-if="currentItem" class="relative">
-        <ImageViewer :src="currentItem.resultImage" :alt="currentItem.fileName">
-          <template #overlay>
-            <DetectionOverlay :boxes="currentItem.detections" />
-          </template>
-        </ImageViewer>
+        <ImageViewer :src="currentItem.resultImage" :alt="currentItem.fileName" />
         <div
           class="absolute left-4 top-4 rounded-full bg-black/40 px-3 py-1 text-xs text-cyan-100 backdrop-blur-sm shadow-[0_0_20px_rgba(0,212,255,0.15)]"
         >
@@ -70,7 +66,6 @@
 import { computed } from "vue";
 import type { DetectionItem } from "../mock/detection";
 import ImageViewer from "./ImageViewer.vue";
-import DetectionOverlay from "./DetectionOverlay.vue";
 
 const props = defineProps({
   items: { type: Array as () => DetectionItem[], default: () => [] },
