@@ -9,9 +9,13 @@ from sqlalchemy import create_engine, Column, String, Integer, Float, DateTime, 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
+import logging
 import uuid
 
 from app.config import settings
+
+
+logger = logging.getLogger(__name__)
 
 # 构建 PostgreSQL 数据库连接 URL
 # 格式：postgresql+psycopg2://用户名:密码@主机:端口/数据库名
@@ -180,9 +184,9 @@ class ModelVersion(Base):
 def init_db():
     """初始化数据库，创建所有表"""
     Base.metadata.create_all(bind=engine)
+    logger.info("Database tables initialized successfully.")
 
 
 if __name__ == "__main__":
     # 单独运行此文件时初始化数据库
     init_db()
-    print("Database tables created successfully!")
