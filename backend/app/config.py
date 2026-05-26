@@ -95,37 +95,37 @@ class TargetClassConfig(BaseModel):
 DEFAULT_TARGET_CATALOG = [
     TargetClassConfig(
         id=0,
-        name="Crazing",
+        name="crazing",
         chinese_name="龟裂",
         description="钢表面出现细密裂纹的缺陷。",
     ),
     TargetClassConfig(
         id=1,
-        name="Inclusion",
+        name="inclusion",
         chinese_name="夹杂",
         description="钢表面或内部存在非金属夹杂物的缺陷。",
     ),
     TargetClassConfig(
         id=2,
-        name="Patches",
+        name="patches",
         chinese_name="斑块",
         description="钢表面存在局部斑块状异常区域的缺陷。",
     ),
     TargetClassConfig(
         id=3,
-        name="Pitted Surface",
+        name="pitted_surface",
         chinese_name="麻点",
         description="钢表面出现点状凹坑的缺陷。",
     ),
     TargetClassConfig(
         id=4,
-        name="Rolled-in Scale",
+        name="rolled-in_scale",
         chinese_name="氧化皮压入",
         description="轧制过程中氧化皮压入钢表面的缺陷。",
     ),
     TargetClassConfig(
         id=5,
-        name="Scratches",
+        name="scratches",
         chinese_name="划伤",
         description="钢表面出现线状划痕的缺陷。",
     ),
@@ -192,11 +192,11 @@ class MinIOConfig(BaseModel):
     port: int = MINIO_PORT
 
     # 访问密钥（Access Key），用于身份验证
-    access_key: str = os.getenv("MINIO_ACCESS_KEY", "admin")
+    access_key: str = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 
     # 秘密密钥（Secret Key），用于身份验证
     # 注意：生产环境应使用强密码并通过环境变量传入
-    secret_key: str = os.getenv("MINIO_SECRET_KEY", "minio_password")
+    secret_key: str = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 
     # 是否使用安全连接（HTTPS）
     # 从环境变量读取并转换为布尔值
@@ -369,7 +369,7 @@ class Settings(BaseModel):
     # 支持的模型：yolo11n.pt, yolo11s.pt, yolo11m.pt 等
     yolo_model_path: str = _resolve_backend_path(
         os.getenv("YOLO_MODEL_PATH"),
-        Paths.models() / "yolo11n.pt",
+        Paths.models() / "neu_det_v2_best.pt",
     )
 
     # 目标检测置信度阈值

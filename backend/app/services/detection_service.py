@@ -175,10 +175,20 @@ class DetectionService:
         detection_id = str(uuid.uuid4())
         logger.info("开始单图检测: detection_id=%s image=%s", detection_id, image_path)
 
+        MIN_CONF = 0.05
+        CLASS_THRESHOLDS = {
+            "crazing": 0.12,
+            "rolled-in_scale": 0.18,
+            "inclusion": 0.20,
+            "scratches": 0.25,
+            "patches": 0.30,
+            "pitted_surface": 0.30,
+        }
+
         results = self.model.predict(
             source=image_path,
-            conf=settings.confidence_threshold,
-            iou=settings.iou_threshold,
+            conf=MIN_CONF,
+            iou=0.35,
             save=False,
         )
 
@@ -191,6 +201,11 @@ class DetectionService:
                 confidence = float(box.conf[0])
                 class_id = int(box.cls[0])
                 class_name = self.get_class_name(class_id)
+
+                min_conf = CLASS_THRESHOLDS.get(class_name, 0.30)
+                if confidence < min_conf:
+                    continue
+
                 chinese_name = self.get_class_chinese_name(class_id, class_name)
 
                 boxes.append(

@@ -1,13 +1,73 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import {
-  buildMockDetectionResult,
-  createDetectionItem,
-  DetectionItem,
-} from "../mock/detection";
+import { type DetectionBox, type DetectionItem, createDetectionItem } from "../mock/detection";
+
+const DEFECT_CONFIG: Record<string, { severity: DetectionBox["severity"]; color: string }> = {
+  crazing: { severity: "high", color: "#ef4444" },
+  inclusion: { severity: "high", color: "#8b5cf6" },
+  patches: { severity: "medium", color: "#f59e0b" },
+  pitted_surface: { severity: "medium", color: "#3b82f6" },
+  "rolled-in_scale": { severity: "medium", color: "#f97316" },
+  scratches: { severity: "low", color: "#22c55e" },
+};
+
+function mapApiBox(box: {
+  x1: number; y1: number; x2: number; y2: number;
+  confidence: number; class_name: string; chinese_name: string;
+}): DetectionBox {
+  const config = DEFECT_CONFIG[box.class_name] ?? { severity: "medium", color: "#6b7280" };
+  return {
+    label: box.chinese_name || box.class_name,
+    confidence: Number(box.confidence.toFixed(2)),
+    bbox: [box.x1, box.y1, box.x2, box.y2],
+    severity: config.severity,
+    color: config.color,
+  };
+}
+
+function makeProxyUrl(url: string): string {
+  if (!url) return "";
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return url;
+  }
+}
+
+async function callDetectionApi(file: File): Promise<{
+  boxes: DetectionBox[];
+  resultImage: string;
+  originalImage: string;
+}> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("model_name", "rsod-yolo11n");
+
+  const response = await fetch("/api/detection/single", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  const json = await response.json();
+  if (!json.success || !json.data) {
+    throw new Error(json.message || "detection failed");
+  }
+
+  const data = json.data;
+  return {
+    boxes: (data.boxes || []).map(mapApiBox),
+    resultImage: makeProxyUrl(data.result_image_url),
+    originalImage: makeProxyUrl(data.image_url),
+  };
+}
 
 export const useBatchDetectionStore = defineStore("batchDetection", () => {
   const items = ref<DetectionItem[]>([]);
+  const fileMap = new Map<string, File>();
   const selectedIndex = ref(0);
   const isDetecting = ref(false);
   const isPaused = ref(false);
@@ -78,7 +138,9 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
           return null;
         }
         try {
-          return await createDetectionItem(file);
+          const item = await createDetectionItem(file);
+          fileMap.set(item.id, file);
+          return item;
         } catch {
           errors.value.push(`${file.name} 读取失败。`);
           return null;
@@ -96,6 +158,7 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
     const index = items.value.findIndex((item) => item.id === id);
     if (index < 0) return;
     items.value.splice(index, 1);
+    fileMap.delete(id);
     if (selectedIndex.value >= items.value.length) {
       selectedIndex.value = Math.max(0, items.value.length - 1);
     }
@@ -103,6 +166,7 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
 
   const clearAll = () => {
     items.value = [];
+    fileMap.clear();
     selectedIndex.value = 0;
     isDetecting.value = false;
     isPaused.value = false;
@@ -121,35 +185,26 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
     }
   };
 
-  const simulateDetection = (item: DetectionItem) => {
-    return new Promise<void>((resolve) => {
-      const steps = 14;
-      let current = 0;
-      const interval = window.setInterval(() => {
-        if (isPaused.value) {
-          window.clearInterval(interval);
-          item.status = "paused";
-          isDetecting.value = false;
-          resolve();
-          return;
-        }
+  const runDetection = async (item: DetectionItem) => {
+    try {
+      item.status = "running";
+      item.progress = 30;
 
-        current += 1;
-        item.progress = Math.min(100, Math.round((current / steps) * 100));
-        item.status = "running";
-        item.updatedAt = Date.now();
+      const file = fileMap.get(item.id);
+      if (!file) throw new Error("no file reference");
 
-        if (current >= steps) {
-          window.clearInterval(interval);
-          const completed = buildMockDetectionResult(item);
-          item.detections = completed.detections;
-          item.status = "completed";
-          item.progress = 100;
-          item.updatedAt = Date.now();
-          resolve();
-        }
-      }, 140);
-    });
+      const result = await callDetectionApi(file);
+
+      item.detections = result.boxes;
+      item.resultImage = result.resultImage;
+      item.status = "completed";
+      item.progress = 100;
+      item.updatedAt = Date.now();
+    } catch (e: unknown) {
+      item.status = "failed";
+      item.progress = 0;
+      errors.value.push(`${item.fileName}: ${(e as Error).message || "detection failed"}`);
+    }
   };
 
   const detectAll = async () => {
@@ -163,7 +218,7 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
       if (item.status === "completed") continue;
       if (isPaused.value) break;
       selectedIndex.value = index;
-      await simulateDetection(item);
+      await runDetection(item);
     }
 
     isDetecting.value = false;
