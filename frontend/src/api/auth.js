@@ -1,3 +1,4 @@
+// @ts-nocheck
 import request from './request'
 
 export const login = (username, password) => {

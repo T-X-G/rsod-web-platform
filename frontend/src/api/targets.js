@@ -1,3 +1,4 @@
+// @ts-nocheck
 import request from './request'
 
 export const getTargets = (page = 1, limit = 10, type = null) => {

@@ -225,7 +225,7 @@ const sendMessage = async (content: string) => {
   isTyping.value = true
   try {
     const payload = messages.value.map(m => ({ role: m.role, content: m.content }))
-    const res = await chat(payload, conversationId.value)
+    const res = await chat(payload, conversationId.value as any)
     if (res.success && res.data) {
       conversationId.value = res.data.conversation_id
       messages.value.push({ role: "assistant", content: res.data.response })

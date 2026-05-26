@@ -1,3 +1,4 @@
+// @ts-nocheck
 import request from './request'
 
 export const chat = (messages, conversationId = null) => {

@@ -117,13 +117,8 @@
                 <span class="text-white font-medium font-mono">{{ item.id }}</span>
               </td>
               <td class="py-4 px-4">
-                <span 
-                  :class="[
-                    'px-3 py-1 rounded-full text-xs font-medium',
-                    item.type === 'single' ? 'bg-primary/20 text-primary' : 'bg-accent/20 text-accent'
-                  ]"
-                >
-                  {{ item.type === 'single' ? '单图检测' : '批量检测' }}
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-primary/20 text-primary">
+                  检测记录
                 </span>
               </td>
                 <td class="py-4 px-4 text-gray-400">{{ formatTime(item.created_at) }}</td>

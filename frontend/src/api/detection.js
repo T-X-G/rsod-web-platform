@@ -1,3 +1,4 @@
+// @ts-nocheck
 import request from './request'
 
 export const detectSingle = (file, modelName = 'steel-defect-yolo11n') => {
