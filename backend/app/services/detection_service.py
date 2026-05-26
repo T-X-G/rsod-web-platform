@@ -15,6 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 from ultralytics import YOLO
 
 from app.config import settings
+from app.services.minio_service import minio_service
 from app.utils.paths import Paths
 
 
@@ -56,13 +57,60 @@ class DetectionService:
             return None
 
     def _load_model_smart(self) -> None:
+        local_info = self._load_local_model_info()
+        latest_model = minio_service.get_latest_model()
+        need_download = False
+        model_object_name = None
+
         if not os.path.exists(settings.yolo_model_path):
-            raise FileNotFoundError(f"模型文件未找到: {settings.yolo_model_path}")
+            logger.info("本地模型不存在，检查 MinIO 最新版本。")
+            need_download = True
+        elif not local_info:
+            logger.info("本地模型缺少版本信息，检查 MinIO 最新版本。")
+            need_download = True
+        elif latest_model and local_info.get("object_name") != latest_model:
+            logger.info("发现新版本模型 %s (当前: %s)", latest_model, local_info.get("object_name", "unknown"))
+            need_download = True
+        elif latest_model:
+            logger.info("本地模型已是最新版本: %s", latest_model)
+
+        if need_download and latest_model:
+            logger.info("从 MinIO 下载最新模型: %s", latest_model)
+            success = minio_service.download_model_file(latest_model, settings.yolo_model_path)
+            if success:
+                model_object_name = latest_model
+                logger.info("模型下载成功: %s", settings.yolo_model_path)
+            elif os.path.exists(settings.yolo_model_path):
+                logger.warning("模型下载失败，使用本地已有模型: %s", settings.yolo_model_path)
+                model_object_name = local_info.get("object_name") if local_info else None
+            else:
+                raise FileNotFoundError(f"模型下载失败且本地不存在: {latest_model}")
+        elif not latest_model:
+            if not os.path.exists(settings.yolo_model_path):
+                raise FileNotFoundError(f"模型文件未找到: {settings.yolo_model_path}")
+            model_object_name = local_info.get("object_name") if local_info else None
+        else:
+            model_object_name = local_info.get("object_name") if local_info else None
+
         self.model = YOLO(settings.yolo_model_path)
-        logger.info("模型加载成功: %s", settings.yolo_model_path)
+        model_metadata = minio_service.get_model_metadata(model_object_name) if model_object_name else None
+        self.current_model_info = {
+            "version": model_metadata.get("version", "unknown") if model_metadata else "unknown",
+            "object_name": model_object_name,
+            "loaded_at": datetime.now().isoformat(),
+            "metadata": model_metadata,
+        }
+        self._save_local_model_info(self.current_model_info)
+        logger.info("模型加载成功: %s (版本: %s)", settings.yolo_model_path, self.current_model_info["version"])
 
     def reload_model(self, model_object_name: Optional[str] = None) -> bool:
         try:
+            if model_object_name:
+                logger.info("加载指定模型: %s", model_object_name)
+                success = minio_service.download_model_file(model_object_name, settings.yolo_model_path)
+                if not success:
+                    logger.error("模型下载失败: %s", model_object_name)
+                    return False
             self.model = None
             self._load_model_smart()
             return True
