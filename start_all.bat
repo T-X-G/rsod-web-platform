@@ -18,7 +18,7 @@ start "Backend" cmd /k "cd backend && conda activate rsod-web && python -m uvico
 timeout /t 3 /nobreak >nul
 
 echo [3/3] Starting Frontend (Vue3 + Vite)...
-start "Frontend" cmd /k "cd frontend_new/ui && npm run dev"
+start "Frontend" cmd /k "cd frontend && npm run dev"
 
 echo.
 echo Done! Frontend: http://localhost:5173  Backend: http://localhost:8000/docs

@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import List, Optional
 
 import cv2
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 from ultralytics import YOLO
 
 from app.config import settings
@@ -233,9 +235,45 @@ class DetectionService:
                     )
                 )
 
-        annotated_image = results[0].plot()
-        annotated_image_bgr = cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR)
-        _, encoded_image = cv2.imencode(".jpg", annotated_image_bgr)
+        img = cv2.imread(image_path)
+        if img is None:
+            img = cv2.cvtColor(results[0].orig_img, cv2.COLOR_RGB2BGR)
+
+        CLASS_COLORS = {
+            "crazing": (0, 0, 255),
+            "inclusion": (255, 0, 255),
+            "patches": (0, 215, 255),
+            "pitted_surface": (255, 0, 0),
+            "rolled-in_scale": (0, 165, 255),
+            "scratches": (0, 255, 0),
+        }
+
+        for box in boxes:
+            x1, y1 = int(box.x1), int(box.y1)
+            x2, y2 = int(box.x2), int(box.y2)
+            color = CLASS_COLORS.get(box.class_name, (0, 255, 255))
+            cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+
+        if boxes:
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            pil_img = Image.fromarray(img_rgb)
+            draw = ImageDraw.Draw(pil_img)
+            try:
+                font = ImageFont.truetype("C:/Windows/Fonts/simhei.ttf", 16)
+            except Exception:
+                font = ImageFont.load_default()
+
+            for box in boxes:
+                x1, y1 = int(box.x1), int(box.y1)
+                color_rgb = CLASS_COLORS.get(box.class_name, (255, 255, 0))
+                label = f" {box.chinese_name} {box.confidence:.2f} "
+                bbox = draw.textbbox((x1, y1 - 22), label, font=font)
+                draw.rectangle(bbox, fill=color_rgb)
+                draw.text((x1, y1 - 22), label, fill=(255, 255, 255), font=font)
+
+            img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+
+        _, encoded_image = cv2.imencode(".jpg", img)
         result_image_bytes = encoded_image.tobytes()
 
         minio_client = minio_svc if minio_svc is not None else minio_service
