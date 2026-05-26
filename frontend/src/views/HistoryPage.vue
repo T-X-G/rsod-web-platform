@@ -126,10 +126,10 @@
                   {{ item.type === 'single' ? '单图检测' : '批量检测' }}
                 </span>
               </td>
-              <td class="py-4 px-4 text-gray-400">{{ item.time }}</td>
+                <td class="py-4 px-4 text-gray-400">{{ formatTime(item.created_at) }}</td>
               <td class="py-4 px-4">
-                <span :class="['text-white font-medium', item.defects > 5 ? 'text-red-400' : 'text-green-400']">
-                  {{ item.defects }}
+                <span :class="['text-white font-medium', item.total_objects > 5 ? 'text-red-400' : 'text-green-400']">
+                  {{ item.total_objects }}
                 </span>
               </td>
               <td class="py-4 px-4">
@@ -167,7 +167,7 @@
                     </svg>
                   </button>
                   <button 
-                    @click="deleteRecord(item.id)"
+                    @click="handleDelete(item.id)"
                     class="text-gray-400 hover:text-red-400 transition-colors"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,8 +211,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DashboardLayout from '../layouts/DashboardLayout.vue'
+import { getHistory, deleteRecord as deleteRecordApi } from '../api/detection'
 
 const searchQuery = ref('')
 const statusFilter = ref('')
@@ -222,59 +223,53 @@ const currentPage = ref(1)
 const pageSize = 10
 
 const stats = ref({
-  total: 68,
-  totalTrend: 12,
-  completed: 62,
-  completedTrend: 8,
-  processing: 2,
-  failed: 4
+  total: 0, totalTrend: 0, completed: 0, completedTrend: 0, processing: 0, failed: 0
 })
 
-const historyData = [
-  { id: 'DET-2024-001', type: 'single', time: '2024-05-20 14:30', defects: 3, status: 'completed' },
-  { id: 'DET-2024-002', type: 'batch', time: '2024-05-20 13:15', defects: 7, status: 'completed' },
-  { id: 'DET-2024-003', type: 'single', time: '2024-05-20 12:45', defects: 1, status: 'completed' },
-  { id: 'DET-2024-004', type: 'single', time: '2024-05-20 11:20', defects: 5, status: 'processing' },
-  { id: 'DET-2024-005', type: 'batch', time: '2024-05-20 10:00', defects: 0, status: 'failed' },
-  { id: 'DET-2024-006', type: 'single', time: '2024-05-19 16:30', defects: 2, status: 'completed' },
-  { id: 'DET-2024-007', type: 'single', time: '2024-05-19 15:45', defects: 8, status: 'completed' },
-  { id: 'DET-2024-008', type: 'batch', time: '2024-05-19 14:20', defects: 4, status: 'completed' },
-  { id: 'DET-2024-009', type: 'single', time: '2024-05-19 13:00', defects: 0, status: 'completed' },
-  { id: 'DET-2024-010', type: 'single', time: '2024-05-19 11:30', defects: 6, status: 'processing' },
-]
+const historyData = ref<Array<{
+  id: string; filename: string; total_objects: number; detection_time: number;
+  result_image_url: string; created_at: string; status: string;
+}>>([])
+
+onMounted(async () => {
+  try {
+    const res = await getHistory(1, 50)
+    if (res.success) {
+      historyData.value = res.data.records || []
+      stats.value.total = res.data.total || historyData.value.length
+    }
+  } catch { /* silent */ }
+})
 
 const filteredHistory = computed(() => {
-  let result = historyData.filter(item => {
+  let result = historyData.value.filter(item => {
     const matchSearch = item.id.toLowerCase().includes(searchQuery.value.toLowerCase())
     const matchStatus = !statusFilter.value || item.status === statusFilter.value
-    const matchType = !typeFilter.value || item.type === typeFilter.value
-    return matchSearch && matchStatus && matchType
+    return matchSearch && matchStatus
   })
-
   result.sort((a, b) => {
-    const timeA = new Date(a.time).getTime()
-    const timeB = new Date(b.time).getTime()
+    const timeA = new Date(a.created_at).getTime()
+    const timeB = new Date(b.created_at).getTime()
     return sortOrder.value === 'desc' ? timeB - timeA : timeA - timeB
   })
-
   return result
 })
 
 const totalPages = computed(() => Math.ceil(filteredHistory.value.length / pageSize))
 
-const viewDetail = (id: string) => {
-  console.log('查看详情:', id)
+const formatTime = (t: string) => {
+  if (!t) return ''
+  return new Date(t).toLocaleString('zh-CN')
 }
 
-const downloadReport = (id: string) => {
-  console.log('下载报告:', id)
-}
+const viewDetail = (id: string) => { console.log('查看详情:', id) }
+const downloadReport = (id: string) => { console.log('下载报告:', id) }
 
-const deleteRecord = (id: string) => {
-  const index = historyData.findIndex(item => item.id === id)
-  if (index > -1) {
-    historyData.splice(index, 1)
-  }
+const handleDelete = async (id: string) => {
+  try {
+    await deleteRecordApi(id)
+    historyData.value = historyData.value.filter(item => item.id !== id)
+  } catch { /* silent */ }
 }
 </script>
 

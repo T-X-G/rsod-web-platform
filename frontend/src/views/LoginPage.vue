@@ -28,19 +28,33 @@ onMounted(() => {
   }, 100);
 });
 
+import { login, register } from '../api/auth'
+
 const handleSubmit = async () => {
-  isLoading.value = true;
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-  isLoading.value = false;
-  // Navigate to dashboard on success
-  if (isRegister.value) {
-    alert("注册成功！正在跳转到系统...");
-  } else {
-    alert("登录成功！正在跳转到系统...");
+  isLoading.value = true
+  try {
+    if (isRegister.value) {
+      const res = await register(form.value.username, form.value.password, form.value.email || undefined)
+      if (res.success) {
+        localStorage.setItem('token', res.data.access_token)
+        router.push('/dashboard/detection')
+      } else {
+        alert(res.message || '注册失败')
+      }
+    } else {
+      const res = await login(form.value.username, form.value.password)
+      if (res.success) {
+        localStorage.setItem('token', res.data.access_token)
+        router.push('/dashboard/detection')
+      } else {
+        alert(res.message || '登录失败')
+      }
+    }
+  } catch {
+    alert('网络错误，请检查后端服务是否运行')
+  } finally {
+    isLoading.value = false
   }
-  // Redirect to detection page
-  router.push("/dashboard/detection");
 };
 
 const goBack = () => {
