@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()  # 加载 .env 文件
+
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -7,6 +10,10 @@ import uvicorn
 import uuid
 import io
 from pathlib import Path
+
+from app.api import router as qa_router
+from app.models import Base
+from app.utils.database import engine
 
 app = FastAPI(
     title="遥感目标智能检测平台",
@@ -32,6 +39,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ==================== 数据库初始化 ====================
+Base.metadata.create_all(bind=engine)
+
+# ==================== 注册路由 ====================
+app.include_router(qa_router)
 
 # ==================== 静态文件目录 ====================
 STATIC_DIR = Path("static")
