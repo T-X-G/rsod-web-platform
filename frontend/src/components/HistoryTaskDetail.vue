@@ -12,10 +12,10 @@
         class="flex items-center justify-between p-6 border-b border-primary/10"
       >
         <div>
-          <h2 class="text-2xl font-bold text-white">{{ task.task_name }}</h2>
+          <h2 class="text-2xl font-bold text-white">{{ task.taskName }}</h2>
           <p class="text-sm text-gray-400 mt-1">
-            {{ formatTime(task.created_at) }} · {{ task.total_images }} 张图片 ·
-            {{ task.total_defects }} 个缺陷
+            {{ formatTime(task.createdAt) }} · {{ task.totalImages }} 张图片 ·
+            {{ task.totalDefects }} 个缺陷
           </p>
         </div>
         <button
@@ -63,8 +63,12 @@
               class="w-full h-full flex items-center justify-center"
             >
               <img
-                :src="currentImage.result_image_url"
-                :alt="currentImage.filename"
+                :src="
+                  viewMode === 'original'
+                    ? currentImage.originalImage
+                    : currentImage.resultImage
+                "
+                :alt="currentImage.fileName"
                 class="max-w-full max-h-full object-contain rounded-2xl shadow-lg"
               />
             </div>
@@ -78,7 +82,7 @@
             <div class="flex gap-3 min-w-max">
               <button
                 v-for="(img, idx) in task.images"
-                :key="img.record_id"
+                :key="img.id"
                 @click="selectedImageIndex = idx"
                 :class="[
                   'relative min-w-[100px] rounded-2xl border p-2 transition-all',
@@ -88,15 +92,15 @@
                 ]"
               >
                 <img
-                  :src="img.result_image_url"
+                  :src="img.originalImage"
                   alt="thumb"
                   class="w-full h-20 rounded-lg object-cover"
                 />
                 <div class="mt-1 text-[10px] text-gray-400 truncate">
-                  {{ img.filename }}
+                  {{ img.fileName }}
                 </div>
                 <div class="text-[9px] text-gray-500">
-                  {{ img.boxes.length }} 缺陷
+                  {{ img.detections.length }} 缺陷
                 </div>
               </button>
             </div>
@@ -117,13 +121,13 @@
                 <div class="p-3 bg-white/5 rounded-xl border border-primary/10">
                   <div class="text-gray-400 text-xs mb-1">总缺陷数</div>
                   <div class="text-2xl font-bold text-white">
-                    {{ task.total_defects }}
+                    {{ task.totalDefects }}
                   </div>
                 </div>
                 <div class="p-3 bg-white/5 rounded-xl border border-primary/10">
                   <div class="text-gray-400 text-xs mb-1">平均置信度</div>
                   <div class="text-2xl font-bold text-primary">
-                    {{ (task.average_confidence * 100).toFixed(1) }}%
+                    {{ (task.averageConfidence * 100).toFixed(1) }}%
                   </div>
                 </div>
               </div>
@@ -167,15 +171,15 @@
                 当前图片
               </div>
               <div class="text-sm text-white font-medium truncate">
-                {{ currentImage.filename }}
+                {{ currentImage.fileName }}
               </div>
               <div class="text-xs text-gray-400 mt-1">
-                {{ currentImage.boxes.length }} 个缺陷
+                {{ currentImage.detections.length }} 个缺陷
               </div>
             </div>
 
             <!-- Defect Categories -->
-            <div v-if="currentImage.boxes.length > 0">
+            <div v-if="currentImage.detections.length > 0">
               <div class="text-xs uppercase tracking-wider text-gray-500 mb-3">
                 缺陷类别
               </div>
@@ -208,17 +212,17 @@
             </div>
 
             <!-- Confidence Details -->
-            <div v-if="currentImage.boxes.length > 0">
+            <div v-if="currentImage.detections.length > 0">
               <div class="text-xs uppercase tracking-wider text-gray-500 mb-3">
                 置信度
               </div>
               <div class="space-y-2">
                 <div
-                  v-for="(box, idx) in currentImage.boxes"
+                  v-for="(detection, idx) in currentImage.detections"
                   :key="idx"
                   class="flex items-center justify-between text-xs"
                 >
-                  <span class="text-gray-400">{{ box.chinese_name || box.class_name }}</span>
+                  <span class="text-gray-400">{{ detection.label }}</span>
                   <div class="flex items-center gap-2">
                     <div
                       class="w-20 h-2 rounded-full bg-white/10 overflow-hidden"
@@ -226,12 +230,12 @@
                       <div
                         class="h-full rounded-full bg-cyan-400 transition-all"
                         :style="{
-                          width: `${box.confidence * 100}%`,
+                          width: `${detection.confidence * 100}%`,
                         }"
                       />
                     </div>
                     <span class="text-gray-500 w-12 text-right">
-                      {{ (box.confidence * 100).toFixed(0) }}%
+                      {{ (detection.confidence * 100).toFixed(0) }}%
                     </span>
                   </div>
                 </div>
@@ -276,22 +280,12 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import type { DetectionTask, DetectionImage } from "../stores/batchDetection";
 import type { DetectionBox } from "../data/detection";
-
-interface TaskImage {
-  record_id: string; filename: string; total_objects: number;
-  result_image_url: string; boxes: DetectionBox[]; status: string;
-  created_at: string; detection_time?: number;
-}
-interface DetailTask {
-  task_id: string; task_name: string; total_images: number; total_defects: number;
-  average_confidence: number; status: string; created_at: string;
-  images?: TaskImage[];
-}
 
 const props = defineProps<{
   isOpen: boolean;
-  task: DetailTask;
+  task: DetectionTask;
 }>();
 
 const emit = defineEmits<{
@@ -302,12 +296,15 @@ const selectedImageIndex = ref(0);
 const viewMode = ref<"original" | "result">("original");
 
 const currentImage = computed(
-  () => (props.task.images || [])[selectedImageIndex.value] || null,
+  () => props.task.images[selectedImageIndex.value] || null,
 );
 
-const getImageCategories = (image: TaskImage) => {
-  const summary = new Map<string, { label: string; count: number; color: string }>();
-  image.boxes.forEach((box: DetectionBox) => {
+const getImageCategories = (image: DetectionImage) => {
+  const summary = new Map<
+    string,
+    { label: string; count: number; color: string }
+  >();
+  image.detections.forEach((box) => {
     const existing = summary.get(box.label);
     if (existing) {
       existing.count += 1;
@@ -327,8 +324,8 @@ const getAllCategories = () => {
     string,
     { label: string; count: number; color: string }
   >();
-  props.task.images?.forEach((img) => {
-    img.boxes.forEach((box) => {
+  props.task.images.forEach((img) => {
+    img.detections.forEach((box) => {
       const existing = summary.get(box.label);
       if (existing) {
         existing.count += 1;
@@ -345,14 +342,12 @@ const getAllCategories = () => {
 };
 
 const getCategoryRatio = (count: number) => {
-  if (!props.task.total_defects) return 0;
-  return Math.min(100, Math.round((count / props.task.total_defects) * 100));
+  if (!props.task.totalDefects) return 0;
+  return Math.min(100, Math.round((count / props.task.totalDefects) * 100));
 };
 
-const formatTime = (t: string | number) => {
-  if (!t) return "";
-  if (typeof t === "number") return new Date(t).toLocaleString("zh-CN");
-  return new Date(t).toLocaleString("zh-CN");
+const formatTime = (timestamp: number) => {
+  return new Date(timestamp).toLocaleString("zh-CN");
 };
 
 const closeDialog = () => {

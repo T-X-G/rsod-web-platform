@@ -163,40 +163,40 @@
           <tbody class="divide-y divide-primary/10">
             <tr
               v-for="task in filteredTasks"
-              :key="task.task_id"
+              :key="task.id"
               class="hover:bg-white/5 transition-colors"
             >
               <td class="py-4 px-4">
                 <span class="text-white font-medium font-mono text-xs">
-                  {{ task.task_id.slice(-12) }}
+                  {{ task.id.slice(-12) }}
                 </span>
               </td>
               <td class="py-4 px-4">
-                <span class="text-white font-medium">{{ task.task_name }}</span>
+                <span class="text-white font-medium">{{ task.taskName }}</span>
               </td>
               <td class="py-4 px-4 text-gray-400">
-                {{ formatTime(task.created_at) }}
+                {{ formatTime(task.createdAt) }}
               </td>
               <td class="py-4 px-4">
                 <span class="text-white font-medium">{{
-                  task.total_images
+                  task.totalImages
                 }}</span>
               </td>
               <td class="py-4 px-4">
                 <span
                   :class="[
                     'text-white font-medium',
-                    task.total_defects > 10
+                    task.totalDefects > 10
                       ? 'text-orange-400'
                       : 'text-green-400',
                   ]"
                 >
-                  {{ task.total_defects }}
+                  {{ task.totalDefects }}
                 </span>
               </td>
               <td class="py-4 px-4">
                 <span class="text-primary font-medium">
-                  {{ (task.average_confidence * 100).toFixed(1) }}%
+                  {{ (task.averageConfidence * 100).toFixed(1) }}%
                 </span>
               </td>
               <td class="py-4 px-4">
@@ -250,7 +250,7 @@
                     </svg>
                   </button>
                   <button
-                    @click="handleDelete(task.task_id)"
+                    @click="handleDelete(task.id)"
                     class="text-gray-400 hover:text-red-400 transition-colors"
                     title="删除任务"
                   >
@@ -323,13 +323,11 @@
 import { ref, computed, onMounted } from "vue";
 import DashboardLayout from "../layouts/DashboardLayout.vue";
 import HistoryTaskDetail from "../components/HistoryTaskDetail.vue";
+import { useBatchDetectionStore } from "../stores/batchDetection";
+import type { DetectionTask } from "../stores/batchDetection";
 
-interface TaskItem {
-  task_id: string; task_name: string; total_images: number; total_defects: number;
-  average_confidence: number; status: string; created_at: string;
-}
+const store = useBatchDetectionStore();
 
-const tasks = ref<TaskItem[]>([]);
 const searchQuery = ref("");
 const statusFilter = ref("");
 const sortOrder = ref<"asc" | "desc">("desc");
@@ -337,57 +335,60 @@ const currentPage = ref(1);
 const pageSize = 10;
 
 const isDetailOpen = ref(false);
-const selectedTask = ref<TaskItem | null>(null);
+const selectedTask = ref<DetectionTask | null>(null);
 
 const stats = computed(() => ({
-  total: tasks.value.length,
-  completed: tasks.value.filter((t) => t.status === "completed").length,
-  processing: tasks.value.filter((t) => t.status === "processing").length,
-  failed: tasks.value.filter((t) => t.status === "failed").length,
+  total: store.detectionTasks.length,
+  completed: store.detectionTasks.filter((t) => t.status === "completed")
+    .length,
+  processing: store.detectionTasks.filter((t) => t.status === "processing")
+    .length,
+  failed: store.detectionTasks.filter((t) => t.status === "failed").length,
 }));
 
 const filteredTasks = computed(() => {
-  let result = tasks.value.filter((task) => {
+  let result = store.detectionTasks.filter((task) => {
     const matchSearch =
-      task.task_id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      task.task_name.toLowerCase().includes(searchQuery.value.toLowerCase());
-    const matchStatus = !statusFilter.value || task.status === statusFilter.value;
+      task.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      task.taskName.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchStatus =
+      !statusFilter.value || task.status === statusFilter.value;
     return matchSearch && matchStatus;
   });
+
   result.sort((a, b) => {
-    const timeA = new Date(a.created_at).getTime();
-    const timeB = new Date(b.created_at).getTime();
+    const timeA = a.createdAt;
+    const timeB = b.createdAt;
     return sortOrder.value === "desc" ? timeB - timeA : timeA - timeB;
   });
+
   return result;
 });
 
-const totalPages = computed(() => Math.ceil(filteredTasks.value.length / pageSize));
+const totalPages = computed(() =>
+  Math.ceil(filteredTasks.value.length / pageSize),
+);
 
-const formatTime = (t: string) => {
-  if (!t) return "";
-  return new Date(t).toLocaleString("zh-CN");
+const formatTime = (timestamp: number) => {
+  return new Date(timestamp).toLocaleString("zh-CN");
 };
 
-const viewDetail = (task: TaskItem) => {
+const viewDetail = (task: DetectionTask) => {
   selectedTask.value = task;
   isDetailOpen.value = true;
 };
 
 const handleDelete = async (taskId: string) => {
   if (confirm("确定要删除这个任务吗？")) {
-    tasks.value = tasks.value.filter((t) => t.task_id !== taskId);
+    store.detectionTasks = store.detectionTasks.filter((t) => t.id !== taskId);
+    store.saveTasksToStorage();
   }
 };
 
-onMounted(async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const res = await fetch("/api/detection/tasks", {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    const json = await res.json();
-    if (json.success) tasks.value = json.data?.tasks || [];
-  } catch { /* ignore */ }
+onMounted(() => {
+  // Tasks are loaded from localStorage via store initialization
+  store.loadTasksFromStorage();
+  // Also sync from backend (merge backend tasks into store)
+  store.syncFromBackend();
 });
 </script>

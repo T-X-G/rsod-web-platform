@@ -69,7 +69,7 @@ function makeProxyUrl(url: string): string {
   }
 }
 
-async function callDetectionApi(file: File): Promise<{
+async function callDetectionApi(file: File, taskId?: string): Promise<{
   boxes: DetectionBox[];
   resultImage: string;
   originalImage: string;
@@ -77,6 +77,7 @@ async function callDetectionApi(file: File): Promise<{
   const formData = new FormData();
   formData.append("file", file);
   formData.append("model_name", "steel-defect-yolo11n");
+  if (taskId) formData.append("task_id", taskId);
 
   const token = localStorage.getItem("token");
   const response = await fetch("/api/detection/single", {
@@ -137,6 +138,57 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
     } catch (e) {
       console.error("Failed to save tasks to localStorage:", e);
     }
+  };
+
+  const syncFromBackend = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/detection/tasks", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const json = await res.json();
+      if (!json.success || !json.data?.tasks) return;
+      for (const bt of json.data.tasks) {
+        if (detectionTasks.value.find((dt) => dt.id === bt.task_id)) continue;
+        const newTask: DetectionTask = {
+          id: bt.task_id,
+          taskName: bt.task_name,
+          createdAt: new Date(bt.created_at).getTime(),
+          updatedAt: Date.now(),
+          status: bt.status,
+          totalImages: bt.total_images,
+          totalDefects: bt.total_defects,
+          averageConfidence: bt.average_confidence,
+          images: [],
+        };
+        detectionTasks.value.push(newTask);
+        try {
+          const dr = await fetch(`/api/detection/task/${bt.task_id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+          const dj = await dr.json();
+          if (dj.success && dj.data?.images) {
+            newTask.images = dj.data.images.map((img: any) => ({
+              id: img.record_id,
+              fileName: img.filename,
+              originalImage: img.result_image_url,
+              resultImage: img.result_image_url,
+              detections: (img.boxes || []).map((box: any) => ({
+                label: box.chinese_name || box.class_name,
+                confidence: box.confidence,
+                bbox: box.bbox,
+                severity: (box.confidence > 0.7 ? "high" : box.confidence > 0.4 ? "medium" : "low") as any,
+                color: "#6b7280",
+              })),
+              status: img.status || "completed",
+              progress: 100,
+              detectTime: img.detection_time,
+            }));
+          }
+        } catch { /* skip detail fetch error */ }
+      }
+      saveTasksToStorage();
+    } catch { /* ignore sync errors */ }
   };
 
   const createDetectionTask = (): DetectionTask => {
@@ -343,7 +395,7 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
       const file = fileMap.get(item.id);
       if (!file) throw new Error("no file reference");
 
-      const result = await callDetectionApi(file);
+      const result = await callDetectionApi(file, currentTask.value?.id);
 
       item.detections = result.boxes;
       item.resultImage = result.resultImage;
@@ -444,6 +496,7 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
     appendTaskResult,
     saveTasksToStorage,
     loadTasksFromStorage,
+    syncFromBackend,
 
     // Profile statistics
     totalTaskCount,
