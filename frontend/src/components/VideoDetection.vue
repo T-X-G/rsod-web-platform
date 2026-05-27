@@ -135,8 +135,31 @@
               <div class="h-full bg-gradient-to-r from-primary to-cyan-400 rounded-full transition-all"
                 :style="{ width: (fullProgress * 100).toFixed(0) + '%' }" />
             </div>
-            <p class="text-xs text-gray-400 text-center">{{ (fullProgress * 100).toFixed(0) }}%</p>
+            <p class="text-xs text-gray-400 text-center">
+              {{ (fullProgress * 100).toFixed(0) }}%
+              <span v-if="fullProgress > 0 && fullProgress < 1">
+                · 预计剩余 {{ formatEstimate(fullElapsed / fullProgress * (1 - fullProgress)) }}
+              </span>
+            </p>
             <button @click="cancelFullDetection" class="w-full text-xs text-gray-400 hover:text-red-400">取消</button>
+          </div>
+
+          <!-- Full Result Panel -->
+          <div v-if="detectionMode === 'full' && fullResult" class="space-y-3">
+            <div class="grid grid-cols-2 gap-2 text-center">
+              <div class="bg-white/5 rounded-lg p-2">
+                <span class="text-primary text-lg font-bold block">{{ fullResult.total_frames }}</span>
+                <span class="text-gray-500 text-xs">总帧数</span>
+              </div>
+              <div class="bg-white/5 rounded-lg p-2">
+                <span class="text-green-400 text-lg font-bold block">{{ fullResult.detected_frames }}</span>
+                <span class="text-gray-500 text-xs">检测帧数</span>
+              </div>
+            </div>
+            <div v-if="fullResult.frames_data?.[0]?.total_objects !== undefined" class="text-center">
+              <span class="text-gray-400 text-xs">累计检测目标</span>
+              <span class="text-primary text-xl font-bold block">{{ fullResult.frames_data.reduce((s: number, f: any) => s + (f.total_objects || 0), 0) }}</span>
+            </div>
           </div>
 
           <!-- Stats -->
@@ -189,19 +212,22 @@ const { sourceType, videoUrl, thumbnail, errorMsg, handleFileSelect, handleDrop,
 
 const detectionMode = ref<"realtime" | "full">("realtime")
 const detectionFPS = ref(5)
-const frameInterval = ref(1)
+const frameInterval = ref(3)
 const confidenceThreshold = ref(0.25)
 const isRunning = ref(false)
 const currentBoxes = ref<DetectionBox[]>([])
 const videoInfo = ref<{ fps: number; frame_count: number; duration: number; width: number; height: number } | null>(null)
 const fullProgress = ref(0)
 const fullTaskId = ref("")
+const fullResult = ref<{ total_frames: number; detected_frames: number; frames_data: any[] } | null>(null)
+const fullElapsed = ref(0)
 const stats = ref({ totalFrames: 0 })
 
 let captureTimer: ReturnType<typeof setInterval> | null = null
 let animFrameId = 0
 let fullPollTimer: ReturnType<typeof setInterval> | null = null
 let resizeObserver: ResizeObserver | null = null
+let fullStartTime = 0
 let videoWidth = 0, videoHeight = 0
 
 const TAG_COLORS: Record<string, string> = {
@@ -217,6 +243,11 @@ function formatTime(s: number) {
   if (!s || s <= 0) return "--:--"
   const m = Math.floor(s / 60), sec = Math.floor(s % 60)
   return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`
+}
+function formatEstimate(s: number) {
+  if (s < 1) return "不到1秒"
+  if (s < 60) return `${Math.ceil(s)}秒`
+  return `${Math.ceil(s / 60)}分钟`
 }
 
 function triggerFileInput() { fileInput.value?.click() }
@@ -236,7 +267,19 @@ function onPlay() { if (isRunning.value && detectionMode.value === "realtime") s
 function onPause() { stopCapture() }
 function onSeeked() { clearCanvas(); resetInterpolation() }
 function onEnded() { if (detectionMode.value === "realtime") stopDetection() }
-function onVideoError() { errorMsg.value = "视频加载失败，请检查格式或网络" }
+function onVideoError() {
+  const v = videoRef.value
+  if (v?.error) {
+    switch (v.error.code) {
+      case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED: errorMsg.value = "视频格式不支持，请使用 mp4/webm 格式"; break
+      case MediaError.MEDIA_ERR_NETWORK: errorMsg.value = "网络错误，无法加载视频"; break
+      case MediaError.MEDIA_ERR_DECODE: errorMsg.value = "视频解码失败，编码不兼容"; break
+      default: errorMsg.value = "视频加载失败"
+    }
+  } else {
+    errorMsg.value = "视频加载失败，请检查格式或网络"
+  }
+}
 
 // Realtime capture
 function startCapture() {
@@ -280,12 +323,15 @@ function animationLoop() {
 async function startFullDetection() {
   if (!videoSrc.value) return
   isRunning.value = true
+  fullResult.value = null
+  fullStartTime = Date.now()
+  fullElapsed.value = 0
   try {
     const blob = await fetch(videoSrc.value).then(r => r.blob())
     const res = await detectFullVideo(new File([blob], "video.mp4", { type: "video/mp4" }), frameInterval.value, confidenceThreshold.value, 0.7)
     if (res.success && res.data) {
       fullTaskId.value = res.data.task_id
-      fullPollTimer = setInterval(pollProgress, 1000)
+      fullPollTimer = setInterval(pollProgress, 3000)
     } else {
       isRunning.value = false
       errorMsg.value = res.message || "启动处理失败"
@@ -297,11 +343,26 @@ async function pollProgress() {
     const res = await getVideoProgress(fullTaskId.value)
     if (!res.success) { stopDetection(); return }
     fullProgress.value = res.data!.progress || 0
+    fullElapsed.value = (Date.now() - fullStartTime) / 1000
     if (res.data!.status !== "processing") {
       stopFullDetection()
-      if (res.data!.status === "completed") { /* done */ }
+      if (res.data!.status === "completed") {
+        await fetchFullResult()
+      } else if (res.data!.status === "failed") {
+        errorMsg.value = "检测处理失败"
+      }
     }
   } catch { /* retry next poll */ }
+}
+async function fetchFullResult() {
+  try {
+    const res = await (await fetch(`/api/video-detection/result/${fullTaskId.value}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })).json()
+    if (res.success && res.data?.result) {
+      fullResult.value = res.data.result
+    }
+  } catch { /* ignore */ }
 }
 async function cancelFullDetection() {
   await cancelVideoDetection(fullTaskId.value)
