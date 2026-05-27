@@ -22,7 +22,16 @@ const showPassword = ref(false);
 const isLoading = ref(false);
 const rememberMe = ref(false);
 
+const captchaCode = ref("");
+function generateCaptcha() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  captchaCode.value = Array.from({ length: 4 }, () =>
+    chars[Math.floor(Math.random() * chars.length)]
+  ).join("");
+}
+
 onMounted(() => {
+  generateCaptcha();
   setTimeout(() => {
     isVisible.value = true;
   }, 100);
@@ -31,6 +40,12 @@ onMounted(() => {
 import { login, register } from '../api/auth'
 
 const handleSubmit = async () => {
+  if (form.value.captcha.toUpperCase() !== captchaCode.value) {
+    alert("验证码错误")
+    generateCaptcha()
+    form.value.captcha = ""
+    return
+  }
   isLoading.value = true
   try {
     if (isRegister.value) {
@@ -325,8 +340,9 @@ const toggleMode = () => {
               />
               <div
                 class="w-28 h-12 bg-muted rounded-xl flex items-center justify-center text-primary font-mono text-lg cursor-pointer hover:bg-muted/80 transition-colors select-none"
+                @click="generateCaptcha"
               >
-                A7K9
+                {{ captchaCode }}
               </div>
             </div>
           </div>
