@@ -273,38 +273,6 @@
               />
             </svg>
           </button>
-
-          <!-- System Status -->
-          <div
-            class="flex items-center gap-3 pl-3 ml-2 border-l border-primary/20"
-          >
-            <div
-              class="w-9 h-9 rounded-full ring-2 ring-primary/30 overflow-hidden"
-            >
-              <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lily"
-                alt="avatar"
-                class="w-full h-full"
-              />
-            </div>
-            <div class="text-sm hidden lg:block">
-              <div class="font-medium text-white">Lily</div>
-              <div class="text-gray-500 text-xs">普通用户</div>
-            </div>
-            <svg
-              class="w-4 h-4 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </div>
         </div>
       </header>
 
