@@ -258,6 +258,16 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
       items.value.every((item) => item.status === "completed"),
   );
 
+  // ============ Profile Statistics ============
+  const totalTaskCount = computed(() => detectionTasks.value.length);
+
+  const totalDetectedObjects = computed(() => {
+    return detectionTasks.value.reduce(
+      (sum, task) => sum + task.totalDefects,
+      0,
+    );
+  });
+
   const addFiles = async (fileList: FileList | File[]) => {
     const files = Array.from(fileList);
     const availableSlots = maxFiles - items.value.length;
@@ -434,5 +444,9 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
     appendTaskResult,
     saveTasksToStorage,
     loadTasksFromStorage,
+
+    // Profile statistics
+    totalTaskCount,
+    totalDetectedObjects,
   };
 });
