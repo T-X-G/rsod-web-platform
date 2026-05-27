@@ -145,21 +145,63 @@
           </div>
 
           <!-- Full Result Panel -->
-          <div v-if="detectionMode === 'full' && fullResult" class="space-y-3">
-            <div class="grid grid-cols-2 gap-2 text-center">
+          <div v-if="detectionMode === 'full' && fullResult" class="space-y-4">
+            <h3 class="text-sm font-medium text-gray-300">完整检测结果</h3>
+
+            <div class="grid grid-cols-3 gap-2 text-center">
               <div class="bg-white/5 rounded-lg p-2">
                 <span class="text-primary text-lg font-bold block">{{ fullResult.total_frames }}</span>
                 <span class="text-gray-500 text-xs">总帧数</span>
               </div>
               <div class="bg-white/5 rounded-lg p-2">
                 <span class="text-green-400 text-lg font-bold block">{{ fullResult.detected_frames }}</span>
-                <span class="text-gray-500 text-xs">检测帧数</span>
+                <span class="text-gray-500 text-xs">检测帧</span>
+              </div>
+              <div class="bg-white/5 rounded-lg p-2">
+                <span class="text-yellow-400 text-lg font-bold block">{{ maxPerFrame }}</span>
+                <span class="text-gray-500 text-xs">最高单帧</span>
               </div>
             </div>
-            <div v-if="fullResult.frames_data?.[0]?.total_objects !== undefined" class="text-center">
+
+            <div class="text-center">
               <span class="text-gray-400 text-xs">累计检测目标</span>
-              <span class="text-primary text-xl font-bold block">{{ fullResult.frames_data.reduce((s: number, f: any) => s + (f.total_objects || 0), 0) }}</span>
+              <span class="text-primary text-xl font-bold block">{{ totalObjects }}</span>
             </div>
+
+            <!-- Per-class stats -->
+            <div v-if="Object.keys(classStats).length" class="space-y-1">
+              <h4 class="text-xs font-medium text-gray-400">缺陷分布</h4>
+              <div class="space-y-1">
+                <div v-for="(count, name) in classStats" :key="name" class="flex items-center gap-2 text-xs">
+                  <span class="w-16 text-gray-300 truncate">{{ name }}</span>
+                  <div class="flex-1 h-3 bg-white/10 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all" :style="{ width: maxCount ? (count / maxCount * 100).toFixed(0) + '%' : '0%', backgroundColor: classColor(name) }" />
+                  </div>
+                  <span class="w-8 text-right text-gray-400">{{ count }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Per-frame detail -->
+            <details v-if="fullResult.frames_data?.length" class="space-y-1">
+              <summary class="text-xs text-gray-400 cursor-pointer hover:text-primary">每帧详情 ({{ fullResult.frames_data.length }}条)</summary>
+              <div class="max-h-40 overflow-y-auto space-y-0.5 mt-2">
+                <div v-for="fd in fullResult.frames_data.slice(0, 50)" :key="fd.frame_index"
+                  class="flex items-center gap-2 text-xs py-1 border-b border-white/5">
+                  <span class="w-10 text-gray-500">#{{ fd.frame_index }}</span>
+                  <span class="w-6 text-center text-white font-medium">{{ fd.total_objects }}</span>
+                  <div class="flex gap-1 flex-1 overflow-hidden">
+                    <span v-for="(b, bi) in (fd.boxes || []).slice(0, 4)" :key="bi"
+                      class="px-1.5 py-0.5 rounded text-[10px] font-medium border"
+                      :class="getTagClass(b.class_name)">
+                      {{ b.chinese_name || b.class_name }}
+                    </span>
+                    <span v-if="(fd.boxes || []).length > 4" class="text-gray-500">+{{ fd.boxes.length - 4 }}</span>
+                  </div>
+                </div>
+              </div>
+              <p v-if="fullResult.frames_data.length > 50" class="text-xs text-gray-500 text-center">仅显示前 50 条</p>
+            </details>
           </div>
 
           <!-- Stats -->
@@ -192,7 +234,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from "vue"
+import { ref, onMounted, onUnmounted, watch, nextTick, computed } from "vue"
 import DashboardLayout from "../layouts/DashboardLayout.vue"
 import { useDetectionCanvas } from "../composables/useDetectionCanvas"
 import { useVideoInput } from "../composables/useVideoInput"
@@ -248,6 +290,36 @@ function formatEstimate(s: number) {
   if (s < 1) return "不到1秒"
   if (s < 60) return `${Math.ceil(s)}秒`
   return `${Math.ceil(s / 60)}分钟`
+}
+
+const CLASS_NAME_MAP: Record<string, string> = {
+  crazing: "龟裂", inclusion: "夹杂", patches: "斑块",
+  pitted_surface: "麻点", "rolled-in_scale": "氧化皮", scratches: "划伤",
+}
+
+const totalObjects = computed(() => {
+  if (!fullResult.value?.frames_data) return 0
+  return fullResult.value.frames_data.reduce((s: number, f: any) => s + (f.total_objects || 0), 0)
+})
+const maxPerFrame = computed(() => {
+  if (!fullResult.value?.frames_data) return 0
+  return Math.max(...fullResult.value.frames_data.map((f: any) => f.total_objects || 0))
+})
+const classStats = computed(() => {
+  const map: Record<string, number> = {}
+  if (!fullResult.value?.frames_data) return map
+  for (const fd of fullResult.value.frames_data) {
+    for (const box of (fd.boxes || [])) {
+      const cn = CLASS_NAME_MAP[box.class_name] || box.chinese_name || box.class_name
+      map[cn] = (map[cn] || 0) + 1
+    }
+  }
+  return map
+})
+const maxCount = computed(() => Math.max(1, ...Object.values(classStats.value)))
+function classColor(name: string) {
+  const cm: Record<string, string> = { 龟裂: "#ef4444", 夹杂: "#8b5cf6", 斑块: "#f59e0b", 麻点: "#3b82f6", 氧化皮: "#f97316", 划伤: "#22c55e" }
+  return cm[name] || "#6b7280"
 }
 
 function triggerFileInput() { fileInput.value?.click() }
