@@ -27,6 +27,21 @@ export interface TaskProgressResult {
   data?: { status: string; progress: number; frames_processed: number; total_frames: number }
 }
 
+export interface DetTaskItem {
+  task_id: string; task_name: string; total_images: number; total_defects: number
+  average_confidence: number; status: string; created_at: string
+}
+export interface DetTasksResult {
+  success: boolean; message?: string
+  data?: { tasks: DetTaskItem[]; total: number; page: number; limit: number }
+}
+export interface DetTaskDetailResult {
+  success: boolean; message?: string
+  data?: { task_id: string; total_images: number; total_defects: number
+    images: Array<{ record_id: string; filename: string; total_objects: number; boxes: any[]; result_image_url: string; status: string; created_at: string }>
+  }
+}
+
 export function detectSingle(file: File, modelName?: string): Promise<DetectionResult>
 export function detectBatch(files: File[], modelName?: string): Promise<DetectionResult>
 export function getHistory(page?: number, limit?: number): Promise<DetectionResult>

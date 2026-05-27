@@ -261,7 +261,7 @@
 import { computed } from "vue";
 import DefectGallery from "./DefectGallery.vue";
 import RiskPanel from "./RiskPanel.vue";
-import type { DefectDetail } from "../mock/defects";
+import type { DefectDetail } from "../data/defects.ts";
 
 interface Props extends DefectDetail {}
 

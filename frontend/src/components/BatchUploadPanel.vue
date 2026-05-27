@@ -123,7 +123,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import type { DetectionItem } from "../mock/detection";
+import type { DetectionItem } from "../data/detection";
 
 defineProps({
   items: { type: Array as () => DetectionItem[], default: () => [] },

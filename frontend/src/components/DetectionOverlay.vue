@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import type { DetectionBox } from "../mock/detection";
+import type { DetectionBox } from "../data/detection";
 
 defineProps({
   boxes: { type: Array as () => DetectionBox[], default: () => [] },

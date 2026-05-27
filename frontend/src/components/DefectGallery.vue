@@ -299,7 +299,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { DefectImage } from "../mock/defects";
+import type { DefectImage } from "../data/defects";
 
 interface Props {
   images: DefectImage[];

@@ -23,6 +23,7 @@ class DetectionRecord(Base):
 
     id = Column(String(36), primary_key=True, default=lambda: str(_uuid.uuid4()))
     user_id = Column(String(36), nullable=False)
+    task_id = Column(String(36), nullable=True)
     filename = Column(String(255), nullable=False)
     total_objects = Column(Integer, default=0)
     detection_time = Column(Float, default=0.0)

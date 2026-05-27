@@ -2,7 +2,9 @@
   <DashboardLayout>
     <div class="space-y-6 pb-10">
       <section class="space-y-6">
-        <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div
+          class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between"
+        >
           <div>
             <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
               <span>工作台</span>
@@ -18,15 +20,21 @@
           <div class="grid grid-cols-3 gap-3 w-full xl:w-auto">
             <div class="glass-card p-4 rounded-3xl border border-primary/20">
               <div class="text-sm text-gray-400">已上传</div>
-              <div class="text-2xl font-semibold text-white">{{ totalImages }}</div>
+              <div class="text-2xl font-semibold text-white">
+                {{ totalImages }}
+              </div>
             </div>
             <div class="glass-card p-4 rounded-3xl border border-primary/20">
               <div class="text-sm text-gray-400">缺陷总数</div>
-              <div class="text-2xl font-semibold text-white">{{ totalDefects }}</div>
+              <div class="text-2xl font-semibold text-white">
+                {{ totalDefects }}
+              </div>
             </div>
             <div class="glass-card p-4 rounded-3xl border border-primary/20">
               <div class="text-sm text-gray-400">平均置信度</div>
-              <div class="text-2xl font-semibold text-white">{{ (averageConfidence * 100).toFixed(1) }}%</div>
+              <div class="text-2xl font-semibold text-white">
+                {{ (averageConfidence * 100).toFixed(1) }}%
+              </div>
             </div>
           </div>
         </div>
@@ -65,22 +73,32 @@
                   <h2 class="text-lg font-semibold text-white">当前选中</h2>
                   <p class="text-gray-400 text-sm">实时检测状态与时间线</p>
                 </div>
-                <span class="rounded-full bg-white/5 px-3 py-2 text-xs text-gray-300">
+                <span
+                  class="rounded-full bg-white/5 px-3 py-2 text-xs text-gray-300"
+                >
                   {{ currentStatus }}
                 </span>
               </div>
               <div class="space-y-3">
-                <div class="flex items-center justify-between text-sm text-gray-400">
+                <div
+                  class="flex items-center justify-between text-sm text-gray-400"
+                >
                   <span>选中图片</span>
-                  <span>{{ store.selectedItem?.fileName || '无' }}</span>
+                  <span>{{ store.selectedItem?.fileName || "无" }}</span>
                 </div>
-                <div class="flex items-center justify-between text-sm text-gray-400">
+                <div
+                  class="flex items-center justify-between text-sm text-gray-400"
+                >
                   <span>检测进度</span>
                   <span>{{ store.selectedItem?.progress ?? 0 }}%</span>
                 </div>
-                <div class="flex items-center justify-between text-sm text-gray-400">
+                <div
+                  class="flex items-center justify-between text-sm text-gray-400"
+                >
                   <span>当前状态</span>
-                  <span class="capitalize">{{ store.selectedItem?.status || '待上传' }}</span>
+                  <span class="capitalize">{{
+                    store.selectedItem?.status || "待上传"
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -128,7 +146,9 @@ const store = useBatchDetectionStore();
 const totalImages = computed(() => store.selectedCount);
 const totalDefects = computed(() => store.totalDefects);
 const averageConfidence = computed(() => store.averageConfidence);
-const completedCount = computed(() => store.items.filter((item) => item.status === "completed").length);
+const completedCount = computed(
+  () => store.items.filter((item) => item.status === "completed").length,
+);
 const hasItems = computed(() => store.items.length > 0);
 const currentStatus = computed(() => {
   if (store.isPaused) return "已暂停";

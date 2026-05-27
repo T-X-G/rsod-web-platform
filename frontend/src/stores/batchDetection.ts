@@ -1,8 +1,39 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import { type DetectionBox, type DetectionItem, createDetectionItem } from "../mock/detection";
+import {
+  type DetectionBox,
+  type DetectionItem,
+  createDetectionItem,
+} from "../data/detection";
 
-const DEFECT_CONFIG: Record<string, { severity: DetectionBox["severity"]; color: string }> = {
+// ============ Task Data Structures ============
+export interface DetectionImage {
+  id: string;
+  fileName: string;
+  originalImage: string;
+  resultImage: string;
+  detections: DetectionBox[];
+  status: "pending" | "running" | "completed" | "paused" | "failed";
+  progress: number;
+  detectTime?: number;
+}
+
+export interface DetectionTask {
+  id: string;
+  taskName: string;
+  createdAt: number;
+  updatedAt: number;
+  status: "processing" | "completed" | "failed";
+  totalImages: number;
+  totalDefects: number;
+  averageConfidence: number;
+  images: DetectionImage[];
+}
+
+const DEFECT_CONFIG: Record<
+  string,
+  { severity: DetectionBox["severity"]; color: string }
+> = {
   crazing: { severity: "high", color: "#ef4444" },
   inclusion: { severity: "high", color: "#8b5cf6" },
   patches: { severity: "medium", color: "#f59e0b" },
@@ -13,9 +44,13 @@ const DEFECT_CONFIG: Record<string, { severity: DetectionBox["severity"]; color:
 
 function mapApiBox(box: {
   bbox: [number, number, number, number];
-  confidence: number; class_name: string; chinese_name: string;
+  confidence: number;
+  class_name: string;
+  chinese_name: string;
 }): DetectionBox {
-  const config = DEFECT_CONFIG[box.class_name] ?? { severity: "medium", color: "#6b7280" } as any;
+  const config =
+    DEFECT_CONFIG[box.class_name] ??
+    ({ severity: "medium", color: "#6b7280" } as any);
   return {
     label: box.chinese_name || box.class_name,
     confidence: Number(box.confidence.toFixed(2)),
@@ -77,6 +112,109 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
   const maxFiles = 10;
   const maxSizeMB = 6;
 
+  // ============ Task Management ============
+  const detectionTasks = ref<DetectionTask[]>([]);
+  const currentTask = ref<DetectionTask | null>(null);
+
+  // Load tasks from localStorage on store creation
+  const loadTasksFromStorage = () => {
+    try {
+      const stored = localStorage.getItem("detectionTasks");
+      if (stored) {
+        detectionTasks.value = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error("Failed to load tasks from localStorage:", e);
+    }
+  };
+
+  const saveTasksToStorage = () => {
+    try {
+      localStorage.setItem(
+        "detectionTasks",
+        JSON.stringify(detectionTasks.value),
+      );
+    } catch (e) {
+      console.error("Failed to save tasks to localStorage:", e);
+    }
+  };
+
+  const createDetectionTask = (): DetectionTask => {
+    const now = Date.now();
+    const taskId = `task-${now}-${Math.random().toString(36).slice(2, 10)}`;
+    const task: DetectionTask = {
+      id: taskId,
+      taskName: `批量检测 ${new Date(now).toLocaleString("zh-CN")}`,
+      createdAt: now,
+      updatedAt: now,
+      status: "processing",
+      totalImages: items.value.length,
+      totalDefects: 0,
+      averageConfidence: 0,
+      images: items.value.map((item) => ({
+        id: item.id,
+        fileName: item.fileName,
+        originalImage: item.originalImage,
+        resultImage: item.resultImage,
+        detections: [...item.detections],
+        status: item.status,
+        progress: item.progress,
+        detectTime: undefined,
+      })),
+    };
+    return task;
+  };
+
+  const updateTaskStats = (task: DetectionTask) => {
+    const allDetections = task.images.flatMap((img) => img.detections);
+    task.totalDefects = allDetections.length;
+    task.totalImages = task.images.length;
+    task.averageConfidence =
+      allDetections.length > 0
+        ? Number(
+            (
+              allDetections.reduce((sum, box) => sum + box.confidence, 0) /
+              allDetections.length
+            ).toFixed(2),
+          )
+        : 0;
+    task.updatedAt = Date.now();
+
+    // Update task status based on images
+    const allCompleted = task.images.every((img) => img.status === "completed");
+    const anyFailed = task.images.some((img) => img.status === "failed");
+    if (anyFailed && allCompleted) {
+      task.status = "failed";
+    } else if (allCompleted) {
+      task.status = "completed";
+    }
+  };
+
+  const appendTaskResult = (taskId: string, imageId: string) => {
+    const task = detectionTasks.value.find((t) => t.id === taskId);
+    if (!task) return;
+
+    const item = items.value.find((i) => i.id === imageId);
+    if (!item) return;
+
+    // Update the image in task
+    const taskImage = task.images.find((img) => img.id === imageId);
+    if (taskImage) {
+      taskImage.resultImage = item.resultImage;
+      taskImage.detections = [...item.detections];
+      taskImage.status = item.status;
+      taskImage.progress = item.progress;
+      taskImage.detectTime = item.updatedAt;
+    }
+
+    // Recalculate task stats
+    updateTaskStats(task);
+    saveTasksToStorage();
+  };
+
+  // Initialize on first access
+  loadTasksFromStorage();
+
   const selectedItem = computed(() => items.value[selectedIndex.value] || null);
 
   const batchProgress = computed(() => {
@@ -119,6 +257,16 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
       !items.value.length ||
       items.value.every((item) => item.status === "completed"),
   );
+
+  // ============ Profile Statistics ============
+  const totalTaskCount = computed(() => detectionTasks.value.length);
+
+  const totalDetectedObjects = computed(() => {
+    return detectionTasks.value.reduce(
+      (sum, task) => sum + task.totalDefects,
+      0,
+    );
+  });
 
   const addFiles = async (fileList: FileList | File[]) => {
     const files = Array.from(fileList);
@@ -202,10 +350,22 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
       item.status = "completed";
       item.progress = 100;
       item.updatedAt = Date.now();
+
+      // Update current task if exists
+      if (currentTask.value) {
+        appendTaskResult(currentTask.value.id, item.id);
+      }
     } catch (e: unknown) {
       item.status = "failed";
       item.progress = 0;
-      errors.value.push(`${item.fileName}: ${(e as Error).message || "detection failed"}`);
+      errors.value.push(
+        `${item.fileName}: ${(e as Error).message || "detection failed"}`,
+      );
+
+      // Update current task status on error
+      if (currentTask.value) {
+        appendTaskResult(currentTask.value.id, item.id);
+      }
     }
   };
 
@@ -214,6 +374,12 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
     if (isDetecting.value) return;
     isDetecting.value = true;
     isPaused.value = false;
+
+    // Create a new detection task
+    const task = createDetectionTask();
+    currentTask.value = task;
+    detectionTasks.value.push(task);
+    saveTasksToStorage();
 
     for (let index = 0; index < items.value.length; index += 1) {
       const item = items.value[index];
@@ -247,6 +413,7 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
   };
 
   return {
+    // Current batch
     items,
     selectedIndex,
     selectedItem,
@@ -268,5 +435,18 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
     pauseDetection,
     detectAll,
     exportResults,
+
+    // Tasks management
+    detectionTasks,
+    currentTask,
+    createDetectionTask,
+    updateTaskStats,
+    appendTaskResult,
+    saveTasksToStorage,
+    loadTasksFromStorage,
+
+    // Profile statistics
+    totalTaskCount,
+    totalDetectedObjects,
   };
 });

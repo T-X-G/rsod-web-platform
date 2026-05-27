@@ -6,6 +6,9 @@ export interface DetectionBox {
   bbox: [number, number, number, number];
   severity: DetectionSeverity;
   color: string;
+  class_name?: string;
+  chinese_name?: string;
+  x1?: number; y1?: number; x2?: number; y2?: number;
 }
 
 export interface DetectionItem {
