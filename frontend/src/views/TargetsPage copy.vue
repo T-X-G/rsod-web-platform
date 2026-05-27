@@ -102,49 +102,28 @@
               class="absolute inset-0 bg-gradient-to-r from-primary/20 via-cyan-500/20 to-primary/20 opacity-50 group-hover:opacity-100 transition-opacity"
             />
 
-            <div class="relative">
-              <div class="flex items-center justify-between mb-2">
-                <h3 class="font-bold text-white text-base">
-                  {{ defect.name }}
-                </h3>
-                <span
-                  :class="[
-                    'text-xs px-2 py-1 rounded-full font-medium',
-                    getRiskBadgeClass(defect.riskLevel),
-                  ]"
-                >
-                  {{ defect.riskLevel }}级
-                </span>
+              <div class="relative">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="font-bold text-white text-base">{{ defect.name }}</h3>
+                  <span class="text-xs px-2 py-1 rounded-full font-medium" :class="getRiskBadgeClass('')">
+                    {{ defect.type || '缺陷类型' }}
+                  </span>
+                </div>
+                <p class="text-xs text-gray-400 mb-3 truncate">
+                  {{ defect.description || '暂无描述' }}
+                </p>
               </div>
-              <p class="text-xs text-gray-400 italic mb-3">
-                {{ defect.englishName }}
-              </p>
-              <div
-                class="flex items-center gap-2 text-primary group-hover:text-cyan-400 transition-colors"
-              >
-                <span class="text-xs font-medium">{{ defect.category }}</span>
-                <svg
-                  class="w-3 h-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </div>
-            </div>
-          </button>
+            </button>
         </div>
       </div>
 
       <!-- Dynamic Detail Section -->
       <div v-if="selectedDefect" class="glass-card p-8">
-        <DefectDetail v-bind="selectedDefect" />
+        <div class="space-y-4">
+          <h3 class="text-xl font-bold text-white">{{ selectedDefect.name }}</h3>
+          <span class="px-3 py-1 rounded-full text-xs font-medium bg-primary/20 text-primary">{{ selectedDefect.type || '缺陷类型' }}</span>
+          <p class="text-gray-300 text-sm leading-relaxed">{{ selectedDefect.description || '暂无描述' }}</p>
+        </div>
       </div>
 
       <!-- Quick Reference Section (when no defect selected) -->
@@ -235,64 +214,51 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import DashboardLayout from "../layouts/DashboardLayout.vue";
-import DefectDetail from "../components/DefectDetail.vue";
-import { defectsMockData, getDefectById } from "../data/defects.ts";
+import { getTargets } from "../api/targets";
 
 const searchQuery = ref("");
-const selectedDefectId = ref<number | null>(null);
+const selectedDefectId = ref<string | null>(null);
+const targets = ref<Array<{ id: string; name: string; type: string; description: string; image_url: string }>>([]);
+
+onMounted(async () => {
+  try {
+    const res = await getTargets(1, 50)
+    if (res.success) {
+      targets.value = res.data?.targets || []
+    }
+  } catch { console.error('operation failed') }
+})
 
 // Get all defects
-const allDefects = computed(() => defectsMockData);
+const allDefects = computed(() => targets.value);
 
 // Get selected defect details
 const selectedDefect = computed(() => {
   if (!selectedDefectId.value) return null;
-  return getDefectById(selectedDefectId.value);
+  return targets.value.find(d => d.id === selectedDefectId.value) || null;
 });
 
 // Filter defects based on search query
 const filteredDefects = computed(() => {
-  if (!searchQuery.value) return allDefects.value;
-
-  const query = searchQuery.value.toLowerCase();
+  if (!searchQuery.value) return allDefects.value
+  const query = searchQuery.value.toLowerCase()
   return allDefects.value.filter(
     (defect) =>
       defect.name.toLowerCase().includes(query) ||
-      defect.englishName.toLowerCase().includes(query) ||
-      defect.category.toLowerCase().includes(query),
-  );
-});
+      (defect.type || '').toLowerCase().includes(query) ||
+      (defect.description || '').toLowerCase().includes(query),
+  )
+})
 
-// Statistics
-const totalDefects = computed(() => allDefects.value.length);
+const totalDefects = computed(() => allDefects.value.length)
+const highRiskCount = computed(() => 0)
+const recommendedModelCount = computed(() => 0)
 
-const highRiskCount = computed(
-  () => allDefects.value.filter((d) => d.riskLevel === "高").length,
-);
+const selectDefect = (defectId: string | null) => {
+  selectedDefectId.value = selectedDefectId.value === defectId ? null : defectId
+}
 
-const recommendedModelCount = computed(() => {
-  let total = 0;
-  allDefects.value.forEach((d) => {
-    total += d.recommendedModels.length;
-  });
-  return total;
-});
-
-// Select defect handler
-const selectDefect = (defectId: number) => {
-  selectedDefectId.value =
-    selectedDefectId.value === defectId ? null : defectId;
-};
-
-// Get risk badge class
-const getRiskBadgeClass = (riskLevel: "低" | "中" | "高") => {
-  const classes = {
-    低: "bg-green-500/20 text-green-400",
-    中: "bg-orange-500/20 text-orange-400",
-    高: "bg-red-500/20 text-red-400",
-  };
-  return classes[riskLevel];
-};
+const getRiskBadgeClass = (_level: string) => 'bg-primary/20 text-primary'
 </script>

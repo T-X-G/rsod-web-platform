@@ -55,7 +55,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import type { DetectionItem } from "../mock/detection";
+import type { DetectionItem } from "../data/detection.ts";
 import ImageViewer from "./ImageViewer.vue";
 
 const props = defineProps({

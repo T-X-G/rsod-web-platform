@@ -1,8 +1,15 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import { type DetectionBox, type DetectionItem, createDetectionItem } from "../mock/detection";
+import {
+  type DetectionBox,
+  type DetectionItem,
+  createDetectionItem,
+} from "../data/detection";
 
-const DEFECT_CONFIG: Record<string, { severity: DetectionBox["severity"]; color: string }> = {
+const DEFECT_CONFIG: Record<
+  string,
+  { severity: DetectionBox["severity"]; color: string }
+> = {
   crazing: { severity: "high", color: "#ef4444" },
   inclusion: { severity: "high", color: "#8b5cf6" },
   patches: { severity: "medium", color: "#f59e0b" },
@@ -13,9 +20,13 @@ const DEFECT_CONFIG: Record<string, { severity: DetectionBox["severity"]; color:
 
 function mapApiBox(box: {
   bbox: [number, number, number, number];
-  confidence: number; class_name: string; chinese_name: string;
+  confidence: number;
+  class_name: string;
+  chinese_name: string;
 }): DetectionBox {
-  const config = DEFECT_CONFIG[box.class_name] ?? { severity: "medium", color: "#6b7280" } as any;
+  const config =
+    DEFECT_CONFIG[box.class_name] ??
+    ({ severity: "medium", color: "#6b7280" } as any);
   return {
     label: box.chinese_name || box.class_name,
     confidence: Number(box.confidence.toFixed(2)),
@@ -205,7 +216,9 @@ export const useBatchDetectionStore = defineStore("batchDetection", () => {
     } catch (e: unknown) {
       item.status = "failed";
       item.progress = 0;
-      errors.value.push(`${item.fileName}: ${(e as Error).message || "detection failed"}`);
+      errors.value.push(
+        `${item.fileName}: ${(e as Error).message || "detection failed"}`,
+      );
     }
   };
 
