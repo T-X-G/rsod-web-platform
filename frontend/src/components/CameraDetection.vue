@@ -71,6 +71,7 @@
 <script setup lang="ts">
 import { ref, onUnmounted } from "vue"
 import DashboardLayout from "../layouts/DashboardLayout.vue"
+import { useDetectionCanvas } from "../composables/useDetectionCanvas"
 
 interface DetectionBox {
   x1: number; y1: number; x2: number; y2: number
@@ -88,6 +89,7 @@ const boxes = ref<DetectionBox[]>([])
 const errorMsg = ref("")
 const animationId = ref(0)
 let frameSkip = 0
+const { drawBoxes, clearCanvas, resetInterpolation } = useDetectionCanvas(canvasRef)
 
 const CLASS_COLORS: Record<string, string> = {
   crazing: "border-red-500 bg-red-500/10 text-red-400",
@@ -96,11 +98,6 @@ const CLASS_COLORS: Record<string, string> = {
   pitted_surface: "border-blue-500 bg-blue-500/10 text-blue-400",
   "rolled-in_scale": "border-orange-500 bg-orange-500/10 text-orange-400",
   scratches: "border-green-500 bg-green-500/10 text-green-400",
-}
-
-const BOX_COLORS: Record<string, string> = {
-  crazing: "#ef4444", inclusion: "#8b5cf6", patches: "#f59e0b",
-  pitted_surface: "#3b82f6", "rolled-in_scale": "#f97316", scratches: "#22c55e",
 }
 
 function getTagClass(box: DetectionBox) {
@@ -138,11 +135,11 @@ function stopCamera() {
   if (animationId.value) cancelAnimationFrame(animationId.value)
   if (stream.value) { stream.value.getTracks().forEach(t => t.stop()); stream.value = null }
   if (videoRef.value) videoRef.value.srcObject = null
-  const canvas = canvasRef.value
-  if (canvas) { const ctx = canvas.getContext("2d"); if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height) }
+  clearCanvas()
   boxes.value = []
   fps.value = 0
   detectionCount.value = 0
+  resetInterpolation()
 }
 
 async function sendFrame(imageData: string) {
@@ -167,11 +164,11 @@ function detectionLoop() {
   if (!stream.value) return
   animationId.value = requestAnimationFrame(detectionLoop)
 
-  if (isPaused.value) { drawBoxes(); return }
+  if (isPaused.value) { _draw(); return }
 
   const video = videoRef.value
   const canvas = canvasRef.value
-  if (!video || !canvas || video.readyState < 2) { drawBoxes(); return }
+  if (!video || !canvas || video.readyState < 2) { _draw(); return }
 
   canvas.width = video.videoWidth
   canvas.height = video.videoHeight
@@ -186,44 +183,14 @@ function detectionLoop() {
   const imageData = tempCanvas.toDataURL("image/jpeg", 0.7)
   frameSkip++
   if (frameSkip % 3 === 0) sendFrame(imageData)
-  drawBoxes()
+  _draw()
 }
 
-function drawBoxes() {
-  const canvas = canvasRef.value
-  const video = videoRef.value
-  if (!canvas || !video) return
-  const ctx = canvas.getContext("2d")
-  if (!ctx) return
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  const scaleX = canvas.width / (video.videoWidth || 640)
-  const scaleY = canvas.height / (video.videoHeight || 480)
-
-  for (const box of boxes.value) {
-    const x1 = box.x1 * scaleX, y1 = box.y1 * scaleY
-    const x2 = box.x2 * scaleX, y2 = box.y2 * scaleY
-    const color = BOX_COLORS[box.class_name] || "#00ffff"
-
-    ctx.strokeStyle = color
-    ctx.lineWidth = 2
-    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1)
-
-    ctx.fillStyle = color
-    ctx.globalAlpha = 0.1
-    ctx.fillRect(x1, y1, x2 - x1, y2 - y1)
-    ctx.globalAlpha = 1
-
-    const label = `${box.chinese_name || box.class_name} ${(box.confidence * 100).toFixed(0)}%`
-    ctx.font = "12px sans-serif"
-    const tw = ctx.measureText(label).width
-    const lh = 16
-    const ly = y1 >= lh ? y1 - lh : y1 + (y2 - y1)
-    ctx.fillStyle = color
-    ctx.fillRect(x1, ly, tw + 8, lh)
-    ctx.fillStyle = "#ffffff"
-    ctx.fillText(label, x1 + 4, ly + 12)
-  }
+function _draw() {
+  const v = videoRef.value
+  const c = canvasRef.value
+  if (!v || !c) return
+  drawBoxes(boxes.value, v.videoWidth, v.videoHeight, c.width, c.height)
 }
 
 onUnmounted(() => stopCamera())

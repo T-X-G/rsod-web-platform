@@ -28,6 +28,7 @@ from app.api import router as qa_router  # noqa: E402
 from app.api.auth import router as auth_router  # noqa: E402
 from app.api.targets import router as targets_router  # noqa: E402
 from app.api.camera import router as camera_router  # noqa: E402
+from app.api.video_detection import router as video_detection_router  # noqa: E402
 
 
 app = FastAPI(
@@ -51,6 +52,8 @@ app.include_router(qa_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(targets_router, prefix="/api")
 app.include_router(camera_router, prefix="/api")
+app.include_router(video_detection_router, prefix="/api")
+app.include_router(video_detection_router, prefix="/api")
 
 
 @app.get("/")

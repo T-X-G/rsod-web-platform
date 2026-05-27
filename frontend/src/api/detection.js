@@ -28,3 +28,29 @@ export const getDetail = (recordId) => {
 export const deleteRecord = (recordId) => {
   return request.delete(`/api/detection/${recordId}`)
 }
+
+export const getVideoInfo = (file) => {
+  const fd = new FormData(); fd.append('file', file)
+  return request.post('/api/video-detection/info', fd)
+}
+
+export const detectRealtimeFrame = (formData) => {
+  return request.post('/api/video-detection/realtime-frame', formData)
+}
+
+export const detectFullVideo = (file, frameInterval, conf, iou) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  fd.append('frame_interval', frameInterval)
+  fd.append('confidence_threshold', conf)
+  fd.append('iou_threshold', iou)
+  return request.post('/api/video-detection/full', fd)
+}
+
+export const getVideoProgress = (taskId) => {
+  return request.get(`/api/video-detection/progress/${taskId}`)
+}
+
+export const cancelVideoDetection = (taskId) => {
+  return request.post(`/api/video-detection/cancel/${taskId}`)
+}
