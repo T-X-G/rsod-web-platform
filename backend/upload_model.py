@@ -17,11 +17,9 @@ def main():
         return
 
     # 2. Upload model + metadata
-    ts = int(datetime.now().timestamp())
-    model_name = f"rsod-yolo11n-best_v2.0.0_{ts}"
-
-    minio_service.upload_model_file(settings.yolo_model_path, f"{model_name}.pt")
-    print(f"Uploaded: {model_name}.pt")
+    base_name = "rsod-yolo11n-best_v2.0.0"
+    object_name = minio_service.upload_model_file(settings.yolo_model_path, base_name)
+    print(f"Uploaded: {object_name}")
 
     metadata = {
         "name": "rsod-yolo11n",
@@ -31,14 +29,15 @@ def main():
         "config": {"epochs": 30, "batch": 4, "device": "0"},
     }
     md_bytes = json.dumps(metadata, ensure_ascii=False, indent=2).encode()
+    meta_name = object_name.replace(".pt", "_metadata.json")
     minio_service.client.put_object(
         settings.minio.models_bucket,
-        f"{model_name}_metadata.json",
+        meta_name,
         data=io.BytesIO(md_bytes),
         length=len(md_bytes),
         content_type="application/json",
     )
-    print(f"Uploaded: {model_name}_metadata.json")
+    print(f"Uploaded: {meta_name}")
 
     # 3. Update local model_info.json
     info_path = Path(settings.yolo_model_path).parent / "model_info.json"
@@ -47,7 +46,7 @@ def main():
             json.dumps(
                 {
                     "version": "2.0.0",
-                    "object_name": f"{model_name}.pt",
+                    "object_name": object_name,
                     "loaded_at": datetime.now().isoformat(),
                     "metadata": metadata,
                 },
@@ -66,10 +65,10 @@ def main():
             .first()
         )
         if existing:
-            existing.model_key = f"{model_name}.pt"
+            existing.model_key = object_name
             existing.updated_at = datetime.now()
         else:
-            db.add(ModelVersion(name="rsod-yolo11n", version="2.0.0", model_key=f"{model_name}.pt", status="active"))
+            db.add(ModelVersion(name="rsod-yolo11n", version="2.0.0", model_key=object_name, status="active"))
         db.commit()
     print("model_versions table updated.")
 
