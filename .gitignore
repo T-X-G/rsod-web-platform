@@ -43,6 +43,7 @@ logs/
 # 运行时生成文件
 # ==================================
 backend/models/model_info.json
+backend/static/result_*.jpg
 
 # ==================================
 # AI 模型（不应提交到大仓库）
